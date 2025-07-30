@@ -6,16 +6,11 @@ let currentRepoPath = null;
 let rawMarkdownContent = '';
 let languageChart = null;
 let lenis; // For smooth scrolling
+// FIXED: Add a global variable to store the complete analysis data
+let currentRepoAnalysisData = null;
 
 // --- INITIALIZATION ---
 console.log("main.js script started.");
-
-// ADDED: Create and inject preloader immediately to prevent flash of unstyled content
-document.body.insertAdjacentHTML('afterbegin', `
-    <div id="preloader">
-        <div class="lds-dual-ring"></div>
-    </div>
-`);
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log("DOM fully loaded and parsed.");
@@ -33,14 +28,12 @@ async function loadApp() {
         initializeApp();
         console.log("Application initialized successfully!");
 
-        // ADDED: Hide preloader after a short delay to allow rendering
         setTimeout(() => {
             document.getElementById('preloader')?.classList.add('preloader-hidden');
         }, 500);
 
     } catch (error) {
         console.error("A critical error occurred during app loading:", error);
-        // ADDED: Hide preloader even if there's an error to not block the error message
         document.getElementById('preloader')?.classList.add('preloader-hidden');
         document.body.innerHTML = `<div style="color: white; padding: 2rem; text-align: center; font-family: sans-serif;">
             <h1>Application Failed to Load</h1>
@@ -100,10 +93,8 @@ function initializeApp() {
     setupGlobalEventListeners();
     setupScrollListener();
 
-    // Add a class to the body to trigger entrance animations reliably
     setTimeout(() => {
         document.body.classList.add('page-loaded');
-        // Force scroll to the top of the page after everything is loaded
         if(lenis) {
             lenis.scrollTo(0, { immediate: true });
         } else {
@@ -116,7 +107,6 @@ function initializeApp() {
 // --- EVENT LISTENER SETUP ---
 
 function setupGlobalEventListeners() {
-    // Mobile Menu Toggle
     const mobileMenuButton = document.getElementById('mobile-menu-button');
     const mobileMenu = document.getElementById('mobile-menu');
     mobileMenuButton?.addEventListener('click', () => {
@@ -124,16 +114,13 @@ function setupGlobalEventListeners() {
         mobileMenuButton.querySelector('svg').classList.toggle('rotate-180');
     });
 
-    // Event delegation for the rest of the app
     document.body.addEventListener('click', (event) => {
         const target = event.target;
         const targetId = target.id;
 
-        // Global buttons
         if (targetId === 'analyze-btn') handleAnalyzeClick();
         if (target.closest('.tab-button')) {
             const id = target.closest('.tab-button').id;
-            // The switchModule function now handles the 'active' class
             if (id === 'tab-module1') switchModule('module1');
             if (id === 'tab-module2') switchModule('module2');
             if (id === 'tab-module3') switchModule('module3');
@@ -143,12 +130,10 @@ function setupGlobalEventListeners() {
             event.preventDefault();
             const module = target.closest('.mobile-menu-item').dataset.module;
             switchModule(module);
-            mobileMenu?.classList.add('hidden'); // Hide menu after selection
+            mobileMenu?.classList.add('hidden');
             mobileMenuButton.querySelector('svg').classList.remove('rotate-180');
         }
         if (targetId === 'backToTopBtn') lenis?.scrollTo(0);
-
-        // Module 1 buttons
         if (targetId === 'copy-btn') copyToClipboard(rawMarkdownContent, 'Markdown copied to clipboard!');
         if (targetId === 'push-btn') handlePushToGitHub();
         if (targetId === 'improve-readme-btn') handleImproveReadme();
@@ -158,27 +143,20 @@ function setupGlobalEventListeners() {
             if (commitMessageInput) commitMessageInput.value = target.textContent;
             showSuccess('Commit message updated!');
         }
-        
-        // Module 3 buttons
         if (targetId === 'refactor-code-btn') handleRefactorCode();
         if (targetId === 'copy-refactored-btn') {
             const code = document.getElementById('refactored-code-output')?.textContent;
             copyToClipboard(code, 'Refactored code copied to clipboard!');
         }
-
-        // Module 4 buttons
         if (targetId === 'generate-code-btn') handleGenerateCode();
         if (targetId === 'execute-code-btn') handleExecuteCode();
         if (targetId === 'copy-generated-code-btn') {
             const code = document.getElementById('generated-code-output')?.textContent;
             copyToClipboard(code, 'Generated code copied to clipboard!');
         }
-
-        // Special Feature button
         if (targetId === 'generate-image-btn') handleGenerateImage();
     });
     
-    // Module 2 file list (specific delegation)
     document.getElementById('module2-container')?.addEventListener('click', (event) => {
         const fileItem = event.target.closest('.file-item');
         if (fileItem && fileItem.dataset.path) {
@@ -186,10 +164,8 @@ function setupGlobalEventListeners() {
         }
     });
 
-    // Listen for file uploads separately
     document.getElementById('data-upload-input')?.addEventListener('change', handleDataUpload);
     
-    // Scroll listener for back-to-top button
     window.addEventListener('scroll', () => {
         document.getElementById('backToTopBtn')?.classList.toggle('show', window.scrollY > 300);
     });
@@ -199,14 +175,8 @@ function setupGlobalEventListeners() {
 function setupScrollListener() {
     const header = document.getElementById('main-header');
     if (!header) return;
-
-    // FIX: This new logic hides the header unless you are at the very top.
     const scrollHandler = (scrollTop) => {
-        if (scrollTop > 50) { // Hide header if scrolled more than 50px
-            header.classList.add('header-hidden');
-        } else { // Show header if at the top
-            header.classList.remove('header-hidden');
-        }
+        header.classList.toggle('header-hidden', scrollTop > 50);
     };
 
     if (lenis) {
@@ -219,35 +189,88 @@ function setupScrollListener() {
 
 // --- CORE HANDLERS ---
 
+/**
+ * FIXED: This function now fetches all data and stores it globally.
+ */
 async function handleAnalyzeClick() {
     hideMessages();
     const repoUrl = document.getElementById('repo-url').value.trim();
     if (!isValidRepoUrl(repoUrl)) return;
 
     currentRepoPath = parseGithubUrl(repoUrl);
-    setLoadingState(true, 'Analyzing repository...');
+    // Reset previous results
+    currentRepoAnalysisData = null;
     document.getElementById('result-container')?.classList.add('hidden');
     document.getElementById('analysis-results-container')?.classList.add('hidden');
+    
+    setLoadingState(true, 'Analyzing repository...');
 
     try {
-        const repoData = await fetchRepoData(currentRepoPath.owner, currentRepoPath.repo);
-        if (currentModule === 'module1') {
-            setLoadingState(true, 'AI is writing the README...');
-            const prompt = `You are an expert technical writer. Create a high-quality README.md for a GitHub repository. Data: Name: ${repoData.name}, Description: ${repoData.description}, Language: ${repoData.primaryLanguage}. Include Description, Features, Installation, and Usage sections.`;
-            rawMarkdownContent = await callAIAssistant(prompt);
-            const readmeOutput = document.getElementById('readme-output');
-            if (readmeOutput) readmeOutput.innerHTML = window.marked.parse(rawMarkdownContent);
-            document.getElementById('result-container')?.classList.remove('hidden');
-        } else if (currentModule === 'module2') {
-            setLoadingState(true, 'Visualizing data & fetching file tree...');
-            displayAnalysis(repoData);
-        }
+        // Fetch all data concurrently
+        const repoDataPromise = fetchRepoData(currentRepoPath.owner, currentRepoPath.repo);
+        const repoData = await repoDataPromise; // Wait for essential data first
+
+        const readmePrompt = `You are an expert technical writer. Create a high-quality README.md for a GitHub repository. Data: Name: ${repoData.name}, Description: ${repoData.description}, Language: ${repoData.primaryLanguage}. Include Description, Features, Installation, and Usage sections.`;
+        const readmeMarkdownPromise = callAIAssistant(readmePrompt);
+
+        const [readmeMarkdown] = await Promise.all([readmeMarkdownPromise]);
+
+        // Store all data globally
+        currentRepoAnalysisData = {
+            repoDetails: repoData,
+            readmeMarkdown: readmeMarkdown,
+            readmeHtml: window.marked.parse(readmeMarkdown)
+        };
+        
+        rawMarkdownContent = readmeMarkdown; // Keep for copy/improve functions
+
+        // Render the content for the currently active module
+        renderCurrentModuleView();
+
     } catch (error) {
         showError(error.message || 'An unknown error occurred.');
     } finally {
         setLoadingState(false);
     }
 }
+
+/**
+ * FIXED: Renders the view for the currently active module using stored data.
+ */
+function renderCurrentModuleView() {
+    if (!currentRepoAnalysisData) return;
+
+    switch (currentModule) {
+        case 'module1':
+            renderModule1(currentRepoAnalysisData);
+            break;
+        case 'module2':
+            renderModule2(currentRepoAnalysisData);
+            break;
+        // Add cases for other modules if they depend on the initial analysis
+    }
+}
+
+/**
+ * FIXED: New function to specifically render Module 1 content.
+ * @param {object} data - The globally stored analysis data.
+ */
+function renderModule1(data) {
+    const readmeOutput = document.getElementById('readme-output');
+    if (readmeOutput) {
+        readmeOutput.innerHTML = data.readmeHtml;
+        document.getElementById('result-container')?.classList.remove('hidden');
+    }
+}
+
+/**
+ * FIXED: New function to specifically render Module 2 content.
+ * @param {object} data - The globally stored analysis data.
+ */
+function renderModule2(data) {
+    displayAnalysis(data.repoDetails);
+}
+
 
 async function handleFileClick(filePath) {
     hideMessages();
@@ -291,6 +314,11 @@ async function handleImproveReadme() {
     try {
         const prompt = `Improve this README.md based on the instruction. Generate a new, complete README. Original:\n---\n${rawMarkdownContent}\n---\nInstruction: "${instruction}". Generate ONLY the full, updated Markdown.`;
         rawMarkdownContent = await callAIAssistant(prompt);
+        // Also update the stored data
+        if(currentRepoAnalysisData) {
+            currentRepoAnalysisData.readmeMarkdown = rawMarkdownContent;
+            currentRepoAnalysisData.readmeHtml = window.marked.parse(rawMarkdownContent);
+        }
         document.getElementById('readme-output').innerHTML = window.marked.parse(rawMarkdownContent);
         showSuccess("README has been improved!");
     } catch (error) { showError(error.message); } finally { setLoadingState(false); }
@@ -350,33 +378,8 @@ function displayLanguageChart(languages) {
         options: { 
             responsive: true, 
             maintainAspectRatio: false,
-            scales: {
-                r: {
-                    pointLabels: {
-                        display: true,
-                        centerPointLabels: true,
-                        font: {
-                            size: 14,
-                            family: "'Poppins', sans-serif"
-                        },
-                        color: '#e2e8f0'
-                    },
-                    ticks: {
-                        display: false
-                    }
-                }
-            },
-            plugins: { 
-                legend: { 
-                    position: 'bottom', 
-                    labels: { 
-                        color: '#e2e8f0',
-                        font: {
-                            family: "'Roboto', sans-serif"
-                        }
-                    } 
-                } 
-            } 
+            scales: { r: { pointLabels: { display: true, centerPointLabels: true, font: { size: 14, family: "'Poppins', sans-serif" }, color: '#e2e8f0' }, ticks: { display: false } } },
+            plugins: { legend: { position: 'bottom', labels: { color: '#e2e8f0', font: { family: "'Roboto', sans-serif" } } } } 
         }
     });
 }
@@ -493,13 +496,13 @@ async function handleGenerateImage() {
 // --- UI & UTILITY FUNCTIONS ---
 
 /**
- * REWRITTEN: Handles switching between modules with smooth animations.
+ * FIXED: Handles switching modules and rendering content from stored data.
  * @param {string} newModuleId - The ID of the module to switch to (e.g., 'module1').
  */
 function switchModule(newModuleId) {
     if (newModuleId === currentModule) return;
 
-    const tabsContainer = document.querySelector('.tabs-container'); // Assuming a container for tabs
+    const tabsContainer = document.getElementById('desktop-tabs'); 
     const mobileMenuButton = document.getElementById('mobile-menu-button');
     const currentModuleEl = document.getElementById(`${currentModule}-container`);
     const newModuleEl = document.getElementById(`${newModuleId}-container`);
@@ -509,29 +512,21 @@ function switchModule(newModuleId) {
         return;
     }
 
-    // Disable navigation during transition to prevent glitches
     tabsContainer?.classList.add('pointer-events-none');
     mobileMenuButton?.classList.add('pointer-events-none', 'opacity-50');
 
-    // --- Animation Out ---
     currentModuleEl.classList.add('animate__animated', 'animate__slideFadeOut');
 
-    // Listen for the end of the fade-out animation
     currentModuleEl.addEventListener('animationend', function handleAnimationOut() {
-        // Clean up old module
         this.classList.remove('animate__animated', 'animate__slideFadeOut');
         this.classList.add('hidden');
         
-        // --- Animation In ---
         newModuleEl.classList.remove('hidden');
         newModuleEl.classList.add('animate__animated', 'animate__slideFadeIn');
 
-        // Update active states while the new module is animating in
-        // Update desktop tabs
         document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
         document.getElementById(`tab-${newModuleId}`)?.classList.add('active');
 
-        // Update mobile menu
         const mobileMenuTitle = document.getElementById('mobile-menu-title');
         const mobileMenuItems = document.querySelectorAll('.mobile-menu-item');
         mobileMenuItems.forEach(item => {
@@ -542,24 +537,28 @@ function switchModule(newModuleId) {
             }
         });
 
-        // Update the global state
         currentModule = newModuleId;
+        
+        // FIXED: Render the view for the new module if data exists
+        renderCurrentModuleView();
 
-        // Listen for the end of the fade-in animation to clean up
         newModuleEl.addEventListener('animationend', function handleAnimationIn() {
             this.classList.remove('animate__animated', 'animate__slideFadeIn');
-            // Re-enable navigation
             tabsContainer?.classList.remove('pointer-events-none');
             mobileMenuButton?.classList.remove('pointer-events-none', 'opacity-50');
         }, { once: true });
 
-    }, { once: true }); // Use { once: true } to auto-remove the listener
+    }, { once: true });
 }
 
 function setLoadingState(isLoading, message = '') {
-    const buttons = document.querySelectorAll('button');
+    const buttons = document.querySelectorAll('button:not(#backToTopBtn)');
     const loadingSpinner = document.getElementById('loading-spinner');
-    buttons.forEach(btn => { btn.disabled = isLoading; btn.classList.toggle('opacity-50', isLoading); btn.classList.toggle('cursor-not-allowed', isLoading); });
+    buttons.forEach(btn => { 
+        btn.disabled = isLoading; 
+        btn.classList.toggle('opacity-50', isLoading); 
+        btn.classList.toggle('cursor-not-allowed', isLoading); 
+    });
     if (loadingSpinner) {
         loadingSpinner.classList.toggle('hidden', !isLoading);
         loadingSpinner.querySelector('p').textContent = message;
