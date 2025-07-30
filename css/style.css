@@ -269,20 +269,6 @@ main#main-content:hover, #special-feature-container:hover {
     background-color: #4f46e5;
     color: white;
 }
-
-
-/* --- Module Content Animations --- */
-/* MODIFIED: Removed hardcoded animations to allow for JS control */
-.module-content {
-    /* animation-duration: 0.5s; */
-    /* animation-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94); */
-    /* animation-fill-mode: forwards; */
-}
-
-/* REMOVED old keyframes, they are replaced by more robust ones below */
-/* .fade-in { animation-name: fadeIn; } */
-/* .fade-out { animation-name: fadeOut; } */
-
 /* ADDED: New Keyframes for module switching */
 @keyframes slide-fade-out {
     from {
