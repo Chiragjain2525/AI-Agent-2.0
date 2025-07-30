@@ -6,34 +6,34 @@ let currentRepoPath = null;
 let rawMarkdownContent = '';
 let languageChart = null;
 let lenis; // For smooth scrolling
-let currentRepoAnalysisData = null;
 
 // --- INITIALIZATION ---
 console.log("main.js script started.");
 
+// 1. Wait for the initial HTML document to be ready.
 document.addEventListener('DOMContentLoaded', () => {
     console.log("DOM fully loaded and parsed.");
+    // 2. Start the process of loading everything else.
     loadApp();
 });
 
 async function loadApp() {
     try {
+        // 3. Wait for external libraries (like THREE, Chart.js) to be available.
         await waitForDependencies();
         console.log("All external libraries are loaded.");
 
+        // 4. Wait for all HTML templates to be fetched and inserted into the page.
         await loadAllTemplates();
         console.log("All HTML templates are loaded.");
 
+        // 5. Now that everything is ready, initialize the application logic.
         initializeApp();
         console.log("Application initialized successfully!");
 
-        setTimeout(() => {
-            document.getElementById('preloader')?.classList.add('preloader-hidden');
-        }, 500);
-
     } catch (error) {
         console.error("A critical error occurred during app loading:", error);
-        document.getElementById('preloader')?.classList.add('preloader-hidden');
+        // Display a user-friendly error on the page itself
         document.body.innerHTML = `<div style="color: white; padding: 2rem; text-align: center; font-family: sans-serif;">
             <h1>Application Failed to Load</h1>
             <p>A critical error occurred. Please check the browser's developer console (F12) for more details.</p>
@@ -42,6 +42,9 @@ async function loadApp() {
     }
 }
 
+/**
+ * Checks every 100ms if the required external libraries are available on the window object.
+ */
 function waitForDependencies() {
     const dependencies = ['THREE', 'Lenis', 'marked', 'Chart'];
     return new Promise((resolve, reject) => {
@@ -52,13 +55,17 @@ function waitForDependencies() {
                 resolve();
             }
         }, 100);
+        // Fail after 10 seconds if libraries don't load
         setTimeout(() => {
             clearInterval(interval);
-            reject(new Error("External libraries took too long to load."));
+            reject(new Error("External libraries took too long to load. Check network connection and CDN links."));
         }, 10000);
     });
 }
 
+/**
+ * Loads all HTML templates concurrently and waits for them to complete.
+ */
 function loadAllTemplates() {
     const templates = [
         { url: 'templates/header.html', selector: '#header-placeholder' },
@@ -72,6 +79,9 @@ function loadAllTemplates() {
     return Promise.all(loadPromises);
 }
 
+/**
+ * Fetches HTML content from a file and loads it into a specified element.
+ */
 async function loadHTML(url, selector) {
     const response = await fetch(url);
     if (!response.ok) throw new Error(`Failed to load template ${url}: ${response.statusText}`);
@@ -84,39 +94,27 @@ async function loadHTML(url, selector) {
     }
 }
 
+/**
+ * Initializes the application's event listeners and animations.
+ */
 function initializeApp() {
     setupThreeJSAnimation();
     setupLenisSmoothScroll();
     initCustomCursorEffect();
     document.getElementById('currentYear').textContent = new Date().getFullYear();
     setupGlobalEventListeners();
-    setupScrollListener();
-
-    setTimeout(() => {
-        document.body.classList.add('page-loaded');
-        if(lenis) {
-            lenis.scrollTo(0, { immediate: true });
-        } else {
-            window.scrollTo(0, 0);
-        }
-    }, 100);
 }
 
 
 // --- EVENT LISTENER SETUP ---
 
 function setupGlobalEventListeners() {
-    const mobileMenuButton = document.getElementById('mobile-menu-button');
-    const mobileMenu = document.getElementById('mobile-menu');
-    mobileMenuButton?.addEventListener('click', () => {
-        mobileMenu?.classList.toggle('hidden');
-        mobileMenuButton.querySelector('svg').classList.toggle('rotate-180');
-    });
-
+    // Using event delegation on the body to ensure elements exist when listeners are attached.
     document.body.addEventListener('click', (event) => {
         const target = event.target;
         const targetId = target.id;
 
+        // Global buttons
         if (targetId === 'analyze-btn') handleAnalyzeClick();
         if (target.closest('.tab-button')) {
             const id = target.closest('.tab-button').id;
@@ -125,14 +123,9 @@ function setupGlobalEventListeners() {
             if (id === 'tab-module3') switchModule('module3');
             if (id === 'tab-module4') switchModule('module4');
         }
-        if (target.closest('.mobile-menu-item')) {
-            event.preventDefault();
-            const module = target.closest('.mobile-menu-item').dataset.module;
-            switchModule(module);
-            mobileMenu?.classList.add('hidden');
-            mobileMenuButton.querySelector('svg').classList.remove('rotate-180');
-        }
         if (targetId === 'backToTopBtn') lenis?.scrollTo(0);
+
+        // Module 1 buttons
         if (targetId === 'copy-btn') copyToClipboard(rawMarkdownContent, 'Markdown copied to clipboard!');
         if (targetId === 'push-btn') handlePushToGitHub();
         if (targetId === 'improve-readme-btn') handleImproveReadme();
@@ -142,122 +135,73 @@ function setupGlobalEventListeners() {
             if (commitMessageInput) commitMessageInput.value = target.textContent;
             showSuccess('Commit message updated!');
         }
+
+        // Module 2 file list
+        const fileItem = target.closest('.file-item');
+        if (fileItem && fileItem.dataset.path) {
+            handleFileClick(fileItem.dataset.path);
+        }
+
+        // Module 3 buttons
         if (targetId === 'refactor-code-btn') handleRefactorCode();
         if (targetId === 'copy-refactored-btn') {
             const code = document.getElementById('refactored-code-output')?.textContent;
             copyToClipboard(code, 'Refactored code copied to clipboard!');
         }
+
+        // Module 4 buttons
         if (targetId === 'generate-code-btn') handleGenerateCode();
         if (targetId === 'execute-code-btn') handleExecuteCode();
         if (targetId === 'copy-generated-code-btn') {
             const code = document.getElementById('generated-code-output')?.textContent;
             copyToClipboard(code, 'Generated code copied to clipboard!');
         }
+
+        // Special Feature button
         if (targetId === 'generate-image-btn') handleGenerateImage();
     });
-    
-    // FIXED: Event delegation for the file tree is now more specific
-    document.getElementById('module2-container')?.addEventListener('click', (event) => {
-        const target = event.target;
-        // For clicking on a file
-        const fileItem = target.closest('.file-item');
-        if (fileItem && fileItem.dataset.path) {
-            handleFileClick(fileItem.dataset.path);
-        }
-        // For clicking on a folder to expand/collapse
-        const folderItem = target.closest('.folder-item');
-        if (folderItem) {
-            folderItem.classList.toggle('open');
-            const nextUl = folderItem.nextElementSibling;
-            if (nextUl && nextUl.tagName === 'UL') {
-                nextUl.classList.toggle('hidden');
-            }
-        }
-    });
 
+    // Listen for file uploads separately
     document.getElementById('data-upload-input')?.addEventListener('change', handleDataUpload);
     
+    // Scroll listener for back-to-top button
     window.addEventListener('scroll', () => {
         document.getElementById('backToTopBtn')?.classList.toggle('show', window.scrollY > 300);
     });
 }
 
-// --- SCROLL LISTENER FOR HEADER ---
-function setupScrollListener() {
-    const header = document.getElementById('main-header');
-    if (!header) return;
-    const scrollHandler = (scrollTop) => {
-        header.classList.toggle('header-hidden', scrollTop > 50);
-    };
-
-    if (lenis) {
-        lenis.on('scroll', (e) => scrollHandler(e.scroll));
-    } else {
-        window.addEventListener('scroll', () => scrollHandler(window.pageYOffset || document.documentElement.scrollTop), false);
-    }
-}
-
 
 // --- CORE HANDLERS ---
+
 async function handleAnalyzeClick() {
     hideMessages();
     const repoUrl = document.getElementById('repo-url').value.trim();
     if (!isValidRepoUrl(repoUrl)) return;
 
     currentRepoPath = parseGithubUrl(repoUrl);
-    currentRepoAnalysisData = null;
+    setLoadingState(true, 'Analyzing repository...');
     document.getElementById('result-container')?.classList.add('hidden');
     document.getElementById('analysis-results-container')?.classList.add('hidden');
-    
-    setLoadingState(true, 'Analyzing repository...');
 
     try {
         const repoData = await fetchRepoData(currentRepoPath.owner, currentRepoPath.repo);
-        const readmePrompt = `You are an expert technical writer. Create a high-quality README.md for a GitHub repository. Data: Name: ${repoData.name}, Description: ${repoData.description}, Language: ${repoData.primaryLanguage}. Include Description, Features, Installation, and Usage sections.`;
-        const readmeMarkdown = await callAIAssistant(readmePrompt);
-
-        currentRepoAnalysisData = {
-            repoDetails: repoData,
-            readmeMarkdown: readmeMarkdown,
-            readmeHtml: window.marked.parse(readmeMarkdown)
-        };
-        
-        rawMarkdownContent = readmeMarkdown;
-
-        renderCurrentModuleView();
-
+        if (currentModule === 'module1') {
+            setLoadingState(true, 'AI is writing the README...');
+            const prompt = `You are an expert technical writer. Create a high-quality README.md for a GitHub repository. Data: Name: ${repoData.name}, Description: ${repoData.description}, Language: ${repoData.primaryLanguage}. Include Description, Features, Installation, and Usage sections.`;
+            rawMarkdownContent = await callAIAssistant(prompt);
+            const readmeOutput = document.getElementById('readme-output');
+            if (readmeOutput) readmeOutput.innerHTML = window.marked.parse(rawMarkdownContent);
+            document.getElementById('result-container')?.classList.remove('hidden');
+        } else if (currentModule === 'module2') {
+            setLoadingState(true, 'Visualizing data & fetching file tree...');
+            displayAnalysis(repoData);
+        }
     } catch (error) {
         showError(error.message || 'An unknown error occurred.');
     } finally {
         setLoadingState(false);
     }
 }
-
-function renderCurrentModuleView() {
-    if (!currentRepoAnalysisData) return;
-
-    switch (currentModule) {
-        case 'module1':
-            renderModule1(currentRepoAnalysisData);
-            break;
-        case 'module2':
-            renderModule2(currentRepoAnalysisData);
-            break;
-    }
-}
-
-function renderModule1(data) {
-    const readmeOutput = document.getElementById('readme-output');
-    if (readmeOutput) {
-        readmeOutput.innerHTML = data.readmeHtml;
-        document.getElementById('result-container')?.classList.remove('hidden');
-    }
-}
-
-function renderModule2(data) {
-    displayAnalysis(data.repoDetails);
-}
-
 
 async function handleFileClick(filePath) {
     hideMessages();
@@ -301,10 +245,6 @@ async function handleImproveReadme() {
     try {
         const prompt = `Improve this README.md based on the instruction. Generate a new, complete README. Original:\n---\n${rawMarkdownContent}\n---\nInstruction: "${instruction}". Generate ONLY the full, updated Markdown.`;
         rawMarkdownContent = await callAIAssistant(prompt);
-        if(currentRepoAnalysisData) {
-            currentRepoAnalysisData.readmeMarkdown = rawMarkdownContent;
-            currentRepoAnalysisData.readmeHtml = window.marked.parse(rawMarkdownContent);
-        }
         document.getElementById('readme-output').innerHTML = window.marked.parse(rawMarkdownContent);
         showSuccess("README has been improved!");
     } catch (error) { showError(error.message); } finally { setLoadingState(false); }
@@ -352,6 +292,7 @@ function displayLanguageChart(languages) {
     if (!canvas) return;
     if (languageChart) languageChart.destroy();
     
+    // The key change is in the options object below
     languageChart = new window.Chart(canvas.getContext('2d'), {
         type: 'polarArea',
         data: {
@@ -364,91 +305,48 @@ function displayLanguageChart(languages) {
         options: { 
             responsive: true, 
             maintainAspectRatio: false,
-            scales: { r: { pointLabels: { display: true, centerPointLabels: true, font: { size: 14, family: "'Poppins', sans-serif" }, color: '#e2e8f0' }, ticks: { display: false } } },
-            plugins: { legend: { position: 'bottom', labels: { color: '#e2e8f0', font: { family: "'Roboto', sans-serif" } } } } 
+            scales: {
+                r: {
+                    // These options add padding and prevent the labels from being cut off
+                    pointLabels: {
+                        display: true,
+                        centerPointLabels: true,
+                        font: {
+                            size: 14,
+                            family: "'Poppins', sans-serif"
+                        },
+                        color: '#e2e8f0'
+                    },
+                    ticks: {
+                        display: false // Hides the radial tick lines (e.g., 1.00, 2.00)
+                    }
+                }
+            },
+            plugins: { 
+                legend: { 
+                    position: 'bottom', 
+                    labels: { 
+                        color: '#e2e8f0',
+                        font: {
+                            family: "'Roboto', sans-serif"
+                        }
+                    } 
+                } 
+            } 
         }
     });
 }
-
-/**
- * FIXED: This function now builds and displays a hierarchical file tree.
- * @param {string} branch - The name of the branch to fetch the tree for.
- */
 async function displayFileTree(branch) {
     const container = document.getElementById('file-list');
     if (!container) return;
-    container.innerHTML = '<div class="text-center text-gray-400">Loading file tree...</div>'; // Loading state
-
     try {
         const response = await fetch(`https://api.github.com/repos/${currentRepoPath.owner}/${currentRepoPath.repo}/git/trees/${branch}?recursive=1`);
         if (!response.ok) throw new Error('Failed to fetch file tree.');
-        const { tree: fileList } = await response.json();
-
-        // 1. Build the tree structure
-        const fileTree = {};
-        fileList.forEach(item => {
-            if (item.type !== 'blob') return; // Only process files
-            let currentLevel = fileTree;
-            const pathParts = item.path.split('/');
-            pathParts.forEach((part, index) => {
-                if (index === pathParts.length - 1) {
-                    // It's a file
-                    currentLevel[part] = {
-                        __isFile: true,
-                        path: item.path,
-                    };
-                } else {
-                    // It's a directory
-                    if (!currentLevel[part]) {
-                        currentLevel[part] = { __isDirectory: true };
-                    }
-                    currentLevel = currentLevel[part];
-                }
-            });
-        });
-
-        // 2. Generate HTML from the tree structure
-        const generateHtml = (tree) => {
-            const sortedKeys = Object.keys(tree).sort((a, b) => {
-                const aIsFile = tree[a].__isFile;
-                const bIsFile = tree[b].__isFile;
-                if (!aIsFile && bIsFile) return -1; // Directories first
-                if (aIsFile && !bIsFile) return 1;
-                return a.localeCompare(b); // Then sort alphabetically
-            });
-
-            let html = '<ul class="file-tree-ul">';
-            for (const key of sortedKeys) {
-                const node = tree[key];
-                if (node.__isFile) {
-                    html += `
-                        <li class="file-item" data-path="${node.path}">
-                            <i class="fas fa-file-code file-icon"></i>
-                            <span>${key}</span>
-                        </li>`;
-                } else if (node.__isDirectory) {
-                    html += `
-                        <li>
-                            <div class="folder-item">
-                                <i class="fas fa-folder folder-icon"></i>
-                                <span>${key}</span>
-                            </div>
-                            ${generateHtml(node)}
-                        </li>`;
-                }
-            }
-            html += '</ul>';
-            return html;
-        };
-        
-        container.innerHTML = generateHtml(fileTree);
-
-    } catch (error) {
-        showError(error.message);
-        container.innerHTML = '<div class="text-center text-red-400">Could not load file tree.</div>';
-    }
+        const { tree } = await response.json();
+        container.innerHTML = tree.filter(item => item.type === 'blob')
+            .map(item => `<div class="file-item p-2 rounded-md flex items-center gap-3 text-sm" data-path="${item.path}"><i class="fas fa-file-code"></i><span>${item.path}</span></div>`).join('');
+    } catch (error) { showError(error.message); }
 }
-
 
 // --- MODULE 3: REFACTOR ---
 async function handleRefactorCode() {
@@ -549,65 +447,18 @@ async function handleGenerateImage() {
 }
 
 // --- UI & UTILITY FUNCTIONS ---
-function switchModule(newModuleId) {
-    if (newModuleId === currentModule) return;
-
-    const tabsContainer = document.getElementById('desktop-tabs'); 
-    const mobileMenuButton = document.getElementById('mobile-menu-button');
-    const currentModuleEl = document.getElementById(`${currentModule}-container`);
-    const newModuleEl = document.getElementById(`${newModuleId}-container`);
-
-    if (!currentModuleEl || !newModuleEl) {
-        console.error(`Module container not found for ${currentModule} or ${newModuleId}`);
-        return;
-    }
-
-    tabsContainer?.classList.add('pointer-events-none');
-    mobileMenuButton?.classList.add('pointer-events-none', 'opacity-50');
-
-    currentModuleEl.classList.add('animate__animated', 'animate__slideFadeOut');
-
-    currentModuleEl.addEventListener('animationend', function handleAnimationOut() {
-        this.classList.remove('animate__animated', 'animate__slideFadeOut');
-        this.classList.add('hidden');
-        
-        newModuleEl.classList.remove('hidden');
-        newModuleEl.classList.add('animate__animated', 'animate__slideFadeIn');
-
-        document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
-        document.getElementById(`tab-${newModuleId}`)?.classList.add('active');
-
-        const mobileMenuTitle = document.getElementById('mobile-menu-title');
-        const mobileMenuItems = document.querySelectorAll('.mobile-menu-item');
-        mobileMenuItems.forEach(item => {
-            item.classList.remove('active');
-            if (item.dataset.module === newModuleId) {
-                item.classList.add('active');
-                if(mobileMenuTitle) mobileMenuTitle.textContent = item.textContent.trim();
-            }
-        });
-
-        currentModule = newModuleId;
-        
-        renderCurrentModuleView();
-
-        newModuleEl.addEventListener('animationend', function handleAnimationIn() {
-            this.classList.remove('animate__animated', 'animate__slideFadeIn');
-            tabsContainer?.classList.remove('pointer-events-none');
-            mobileMenuButton?.classList.remove('pointer-events-none', 'opacity-50');
-        }, { once: true });
-
-    }, { once: true });
+function switchModule(newModule) {
+    if (newModule === currentModule) return;
+    document.querySelectorAll('.module-content').forEach(c => c.classList.add('hidden'));
+    document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+    document.getElementById(`${newModule}-container`)?.classList.remove('hidden');
+    document.getElementById(`tab-${newModule}`)?.classList.add('active');
+    currentModule = newModule;
 }
-
 function setLoadingState(isLoading, message = '') {
-    const buttons = document.querySelectorAll('button:not(#backToTopBtn)');
+    const buttons = document.querySelectorAll('button');
     const loadingSpinner = document.getElementById('loading-spinner');
-    buttons.forEach(btn => { 
-        btn.disabled = isLoading; 
-        btn.classList.toggle('opacity-50', isLoading); 
-        btn.classList.toggle('cursor-not-allowed', isLoading); 
-    });
+    buttons.forEach(btn => { btn.disabled = isLoading; btn.classList.toggle('opacity-50', isLoading); btn.classList.toggle('cursor-not-allowed', isLoading); });
     if (loadingSpinner) {
         loadingSpinner.classList.toggle('hidden', !isLoading);
         loadingSpinner.querySelector('p').textContent = message;
