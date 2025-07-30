@@ -270,12 +270,6 @@ main#main-content:hover, #special-feature-container:hover {
     color: white;
 }
 
-
-/* --- Module Content Animations --- */
-.module-content {
-    /* Base styles are removed, controlled by JS animation classes */
-}
-
 @keyframes slide-fade-out {
     from {
         opacity: 1;
@@ -327,14 +321,6 @@ main#main-content:hover, #special-feature-container:hover {
     margin-top: 1.5rem;
     margin-bottom: 1rem;
 }
-
-#readme-output-container h1, #code-explanation-container h1, #refactored-code-container h1, #generated-code-container h1 { font-size: 2em; }
-#readme-output-container h2, #code-explanation-container h2, #refactored-code-container h2, #generated-code-container h2 { font-size: 1.5em; }
-#readme-output-container h3, #code-explanation-container h3, #refactored-code-container h3, #generated-code-container h3 { font-size: 1.25em; }
-#readme-output-container p, #code-explanation-container p, #refactored-code-container p, #generated-code-container p { margin-bottom: 1rem; line-height: 1.6; }
-#readme-output-container a, #code-explanation-container a, #refactored-code-container a, #generated-code-container a { color: #818cf8; text-decoration: underline; }
-#readme-output-container ul, #readme-output-container ol, #code-explanation-container ul, #code-explanation-container ol, #refactored-code-container ul, #refactored-code-container ol, #generated-code-container ul, #generated-code-container ol { margin-left: 1.5rem; margin-bottom: 1rem; list-style-position: outside; }
-#readme-output-container li, #code-explanation-container li, #refactored-code-container li, #generated-code-container li { margin-bottom: 0.5rem; }
 
 /* --- Code & Preformatted Text Styling --- */
 /* Inline code snippets */
