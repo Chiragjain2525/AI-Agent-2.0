@@ -31,6 +31,9 @@ async function loadApp() {
         initializeApp();
         console.log("Application initialized successfully!");
 
+        // Set initial module title on mobile
+        updateMobileModuleTitle('module1');
+
     } catch (error) {
         console.error("A critical error occurred during app loading:", error);
         // Display a user-friendly error on the page itself
@@ -470,8 +473,35 @@ function switchModule(newModule) {
     document.getElementById(`tab-${newModule}`)?.classList.add('active');
     document.getElementById(`mobile-tab-${newModule}`)?.classList.add('active');
 
+    // Update the mobile selected module title
+    updateMobileModuleTitle(newModule);
+
     currentModule = newModule;
 }
+
+// Function to update the mobile module title
+function updateMobileModuleTitle(module) {
+    const titleElement = document.getElementById('mobile-selected-module-title');
+    if (titleElement) {
+        switch (module) {
+            case 'module1':
+                titleElement.textContent = 'Module 1: README Generator';
+                break;
+            case 'module2':
+                titleElement.textContent = 'Module 2: Code Analyzer';
+                break;
+            case 'module3':
+                titleElement.textContent = 'Module 3: Code Refactor';
+                break;
+            case 'module4':
+                titleElement.textContent = 'Module 4: Code Generator';
+                break;
+            default:
+                titleElement.textContent = 'Select Module';
+        }
+    }
+}
+
 function setLoadingState(isLoading, message = '') {
     const buttons = document.querySelectorAll('button');
     const loadingSpinner = document.getElementById('loading-spinner');
