@@ -132,12 +132,22 @@ main#main-content, #special-feature-container {
 /* --- Module Tabs --- */
 .tab-button {
     transition: all 0.3s ease;
-    border-bottom: 2px solid transparent;
+    position: relative; /* Needed for pseudo-element */
+    /* Keep a transparent border for consistent height, but make it very thin */
+    border-bottom: 1px solid transparent; 
 }
 
-.tab-button.active {
-    color: #c084fc;
-    border-bottom-color: #c084fc;
+/* Custom underline for active tab */
+.tab-button.active::after {
+    content: '';
+    position: absolute;
+    bottom: -1px; /* Adjust to align with the bottom border of the tab container */
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80%; /* Adjust width as needed, e.g., 80% of the button's width */
+    height: 2px;
+    background-color: #c084fc;
+    transition: width 0.3s ease;
 }
 
 /* --- Module Content Animations --- */
@@ -327,4 +337,20 @@ pre code {
 .footer-icon:hover {
     transform: scale(1.2);
     color: #a855f7;
+}
+
+/* Add this to your style.css */
+@keyframes headerPop {
+    0% {
+        opacity: 0;
+        transform: translateY(-20px) scale(0.95);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.animate-header-pop {
+    animation: headerPop 0.6s ease-out forwards;
 }
