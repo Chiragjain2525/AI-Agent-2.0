@@ -1,0 +1,11 @@
+# This file configures the build settings for Netlify.
+
+[build]
+  # This tells Netlify that our site is static and doesn't need a build command.
+  command = "# no build command"
+  # This is the directory that contains the deploy-ready HTML files and assets.
+  publish = "."
+
+[functions]
+  # This specifies the directory where Netlify will find our serverless functions.
+  directory = "netlify/functions"

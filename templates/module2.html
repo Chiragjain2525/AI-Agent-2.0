@@ -1,0 +1,26 @@
+<div id="analysis-results-container" class="hidden">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
+        <div>
+            <h2 class="text-2xl font-bold text-gray-50 mb-4">Language Breakdown</h2>
+            <div class="relative h-80 p-4 bg-slate-800/50 rounded-lg">
+                <canvas id="language-chart"></canvas>
+            </div>
+        </div>
+        <div>
+            <h2 class="text-2xl font-bold text-gray-50 mb-4">File Explorer</h2>
+            <div id="file-list" class="p-4 bg-slate-800/50 rounded-lg max-h-80 overflow-y-auto"></div>
+        </div>
+    </div>
+    <div id="code-display-section" class="hidden mt-8">
+        <h2 id="code-file-header" class="text-2xl font-bold text-gray-50 mb-4">Code Viewer</h2>
+        <div id="code-viewer" class="mb-6"></div>
+        <h2 class="text-2xl font-bold text-gray-50 mb-4">AI Code Explanation</h2>
+        <div id="code-explanation-container">
+            <div id="code-explanation-output"></div>
+        </div>
+            <div id="code-explanation-loader" class="hidden text-center py-6">
+            <div class="lds-dual-ring"></div>
+            <p class="mt-4 text-gray-400 font-medium">AI is explaining the code...</p>
+        </div>
+    </div>
+    </div>
