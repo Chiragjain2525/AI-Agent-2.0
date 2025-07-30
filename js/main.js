@@ -118,12 +118,21 @@ function setupGlobalEventListeners() {
         if (targetId === 'analyze-btn') handleAnalyzeClick();
         if (target.closest('.tab-button')) {
             const id = target.closest('.tab-button').id;
-            if (id === 'tab-module1') switchModule('module1');
-            if (id === 'tab-module2') switchModule('module2');
-            if (id === 'tab-module3') switchModule('module3');
-            if (id === 'tab-module4') switchModule('module4');
+            // Handle both desktop and mobile tab buttons
+            if (id.includes('module')) {
+                const moduleNum = id.replace(/^(mobile-)?tab-/, '');
+                switchModule(moduleNum);
+                // Close mobile menu if clicked from there
+                if (id.startsWith('mobile-')) {
+                    document.getElementById('mobile-module-menu')?.classList.add('hidden');
+                }
+            }
         }
         if (targetId === 'backToTopBtn') lenis?.scrollTo(0);
+        if (targetId === 'mobile-menu-toggle' || target.closest('#mobile-menu-toggle')) {
+            document.getElementById('mobile-module-menu')?.classList.toggle('hidden');
+        }
+
 
         // Module 1 buttons
         if (targetId === 'copy-btn') copyToClipboard(rawMarkdownContent, 'Markdown copied to clipboard!');
@@ -449,10 +458,18 @@ async function handleGenerateImage() {
 // --- UI & UTILITY FUNCTIONS ---
 function switchModule(newModule) {
     if (newModule === currentModule) return;
+    // Hide all module content containers
     document.querySelectorAll('.module-content').forEach(c => c.classList.add('hidden'));
+    // Deactivate all tab buttons (both desktop and mobile)
     document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+
+    // Show the selected module's content
     document.getElementById(`${newModule}-container`)?.classList.remove('hidden');
+    
+    // Activate the corresponding tab button (both desktop and mobile)
     document.getElementById(`tab-${newModule}`)?.classList.add('active');
+    document.getElementById(`mobile-tab-${newModule}`)?.classList.add('active');
+
     currentModule = newModule;
 }
 function setLoadingState(isLoading, message = '') {
