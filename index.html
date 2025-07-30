@@ -19,21 +19,21 @@
     <!-- Local Stylesheet -->
     <link rel="stylesheet" href="css/style.css">
 </head>
-<body class="text-gray-200"> <!-- Removed bg-slate-900 from this line -->
+<body class="text-gray-200">
     <canvas id="bg-canvas"></canvas>
 
     <!-- Header will be loaded here -->
     <div id="header-placeholder"></div>
 
-    <div class="container mx-auto px-4 md:px-8 max-w-4xl relative z-10 py-12">
+    <div class="container mx-auto px-4 md:px-8 max-w-4xl relative z-10 py-8 md:py-12">
         <main id="main-content">
             
-            <!-- Module Tabs -->
-            <div class="flex border-b border-slate-700 mb-6">
-                <button id="tab-module1" class="tab-button active font-semibold text-lg py-2 px-4">Module 1: README Generator</button>
-                <button id="tab-module2" class="tab-button font-semibold text-lg py-2 px-4">Module 2: Code Analyzer</button>
-                <button id="tab-module3" class="tab-button font-semibold text-lg py-2 px-4">Module 3: Code Refactor</button>
-                <button id="tab-module4" class="tab-button font-semibold text-lg py-2 px-4">Module 4: Code Generator</button>
+            <!-- Module Tabs - Made more compact for all screens to prevent overflow -->
+            <div class="flex justify-center border-b border-slate-700 mb-6 pb-2">
+                <button id="tab-module1" class="tab-button active font-semibold text-xs sm:text-sm py-1 px-2 flex-shrink-0">Module 1: README Generator</button>
+                <button id="tab-module2" class="tab-button font-semibold text-xs sm:text-sm py-1 px-2 flex-shrink-0">Module 2: Code Analyzer</button>
+                <button id="tab-module3" class="tab-button font-semibold text-xs sm:text-sm py-1 px-2 flex-shrink-0">Module 3: Code Refactor</button>
+                <button id="tab-module4" class="tab-button font-semibold text-xs sm:text-sm py-1 px-2 flex-shrink-0 hidden md:block">Module 4: Code Generator</button>
             </div>
 
             <!-- Global Components -->
@@ -70,28 +70,28 @@
         </main>
         
         <!-- Special Feature: Image Generator -->
-        <div id="special-feature-container" class="mt-12">
+        <div id="special-feature-container" class="mt-8 md:mt-12">
              <!-- Special feature content will be loaded here -->
         </div>
         
-        <footer class="text-center py-12 mt-12 bg-transparent relative z-10">
+        <footer class="text-center py-8 md:py-12 mt-8 md:mt-12 bg-transparent relative z-10">
             <div class="container mx-auto">
                 <div class="mb-6">
-                    <h3 class="text-2xl font-semibold text-purple-400 mb-4 text-glow">Connect With Me</h3>
-                    <div class="flex justify-center space-x-6">
+                    <h3 class="text-xl sm:text-2xl font-semibold text-purple-400 mb-4 text-glow">Connect With Me</h3>
+                    <div class="flex justify-center space-x-4 sm:space-x-6">
                         <a href="https://linkedin.com/in/chirag-jain-922042362" target="_blank" rel="noopener noreferrer" class="footer-icon" aria-label="LinkedIn Profile">
                             <i class="fab fa-linkedin fa-2x"></i>
                         </a>
-                        <a href="https://github.com/Chiragjain2525" target="_blank" rel="noopener noreferrer" class="footer-icon" aria-label="GitHub Profile">
+                        <a href="https://github.com/Chiragj2525" target="_blank" rel="noopener noreferrer" class="footer-icon" aria-label="GitHub Profile">
                             <i class="fab fa-github fa-2x"></i>
                         </a>
-                        <a href="mailto:chiragjain2320@gmail.com" class="footer-icon" aria-label="Email Me">
+                        <a href="mailto:chiragj2320@gmail.com" class="footer-icon" aria-label="Email Me">
                             <i class="fas fa-envelope fa-2x"></i>
                         </a>
                     </div>
                 </div>
-                <p class="text-gray-400">&copy; <span id="currentYear"></span> Chirag Jain. All rights reserved.</p>
-                <p class="text-sm text-purple-500">Crafted with <span class="text-red-500">&hearts;</span>, Three.js & TailwindCSS</p>
+                <p class="text-gray-400 text-sm sm:text-base">&copy; <span id="currentYear"></span> Chirag Jain. All rights reserved.</p>
+                <p class="text-xs sm:text-sm text-purple-500">Crafted with <span class="text-red-500">&hearts;</span>, Three.js & TailwindCSS</p>
             </div>
         </footer>
     </div>
