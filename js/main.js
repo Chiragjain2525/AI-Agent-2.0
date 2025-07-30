@@ -6,7 +6,6 @@ let currentRepoPath = null;
 let rawMarkdownContent = '';
 let languageChart = null;
 let lenis; // For smooth scrolling
-// FIXED: Add a global variable to store the complete analysis data
 let currentRepoAnalysisData = null;
 
 // --- INITIALIZATION ---
@@ -157,10 +156,22 @@ function setupGlobalEventListeners() {
         if (targetId === 'generate-image-btn') handleGenerateImage();
     });
     
+    // FIXED: Event delegation for the file tree is now more specific
     document.getElementById('module2-container')?.addEventListener('click', (event) => {
-        const fileItem = event.target.closest('.file-item');
+        const target = event.target;
+        // For clicking on a file
+        const fileItem = target.closest('.file-item');
         if (fileItem && fileItem.dataset.path) {
             handleFileClick(fileItem.dataset.path);
+        }
+        // For clicking on a folder to expand/collapse
+        const folderItem = target.closest('.folder-item');
+        if (folderItem) {
+            folderItem.classList.toggle('open');
+            const nextUl = folderItem.nextElementSibling;
+            if (nextUl && nextUl.tagName === 'UL') {
+                nextUl.classList.toggle('hidden');
+            }
         }
     });
 
@@ -188,17 +199,12 @@ function setupScrollListener() {
 
 
 // --- CORE HANDLERS ---
-
-/**
- * FIXED: This function now fetches all data and stores it globally.
- */
 async function handleAnalyzeClick() {
     hideMessages();
     const repoUrl = document.getElementById('repo-url').value.trim();
     if (!isValidRepoUrl(repoUrl)) return;
 
     currentRepoPath = parseGithubUrl(repoUrl);
-    // Reset previous results
     currentRepoAnalysisData = null;
     document.getElementById('result-container')?.classList.add('hidden');
     document.getElementById('analysis-results-container')?.classList.add('hidden');
@@ -206,25 +212,18 @@ async function handleAnalyzeClick() {
     setLoadingState(true, 'Analyzing repository...');
 
     try {
-        // Fetch all data concurrently
-        const repoDataPromise = fetchRepoData(currentRepoPath.owner, currentRepoPath.repo);
-        const repoData = await repoDataPromise; // Wait for essential data first
-
+        const repoData = await fetchRepoData(currentRepoPath.owner, currentRepoPath.repo);
         const readmePrompt = `You are an expert technical writer. Create a high-quality README.md for a GitHub repository. Data: Name: ${repoData.name}, Description: ${repoData.description}, Language: ${repoData.primaryLanguage}. Include Description, Features, Installation, and Usage sections.`;
-        const readmeMarkdownPromise = callAIAssistant(readmePrompt);
+        const readmeMarkdown = await callAIAssistant(readmePrompt);
 
-        const [readmeMarkdown] = await Promise.all([readmeMarkdownPromise]);
-
-        // Store all data globally
         currentRepoAnalysisData = {
             repoDetails: repoData,
             readmeMarkdown: readmeMarkdown,
             readmeHtml: window.marked.parse(readmeMarkdown)
         };
         
-        rawMarkdownContent = readmeMarkdown; // Keep for copy/improve functions
+        rawMarkdownContent = readmeMarkdown;
 
-        // Render the content for the currently active module
         renderCurrentModuleView();
 
     } catch (error) {
@@ -234,9 +233,6 @@ async function handleAnalyzeClick() {
     }
 }
 
-/**
- * FIXED: Renders the view for the currently active module using stored data.
- */
 function renderCurrentModuleView() {
     if (!currentRepoAnalysisData) return;
 
@@ -247,14 +243,9 @@ function renderCurrentModuleView() {
         case 'module2':
             renderModule2(currentRepoAnalysisData);
             break;
-        // Add cases for other modules if they depend on the initial analysis
     }
 }
 
-/**
- * FIXED: New function to specifically render Module 1 content.
- * @param {object} data - The globally stored analysis data.
- */
 function renderModule1(data) {
     const readmeOutput = document.getElementById('readme-output');
     if (readmeOutput) {
@@ -263,10 +254,6 @@ function renderModule1(data) {
     }
 }
 
-/**
- * FIXED: New function to specifically render Module 2 content.
- * @param {object} data - The globally stored analysis data.
- */
 function renderModule2(data) {
     displayAnalysis(data.repoDetails);
 }
@@ -314,7 +301,6 @@ async function handleImproveReadme() {
     try {
         const prompt = `Improve this README.md based on the instruction. Generate a new, complete README. Original:\n---\n${rawMarkdownContent}\n---\nInstruction: "${instruction}". Generate ONLY the full, updated Markdown.`;
         rawMarkdownContent = await callAIAssistant(prompt);
-        // Also update the stored data
         if(currentRepoAnalysisData) {
             currentRepoAnalysisData.readmeMarkdown = rawMarkdownContent;
             currentRepoAnalysisData.readmeHtml = window.marked.parse(rawMarkdownContent);
@@ -383,17 +369,86 @@ function displayLanguageChart(languages) {
         }
     });
 }
+
+/**
+ * FIXED: This function now builds and displays a hierarchical file tree.
+ * @param {string} branch - The name of the branch to fetch the tree for.
+ */
 async function displayFileTree(branch) {
     const container = document.getElementById('file-list');
     if (!container) return;
+    container.innerHTML = '<div class="text-center text-gray-400">Loading file tree...</div>'; // Loading state
+
     try {
         const response = await fetch(`https://api.github.com/repos/${currentRepoPath.owner}/${currentRepoPath.repo}/git/trees/${branch}?recursive=1`);
         if (!response.ok) throw new Error('Failed to fetch file tree.');
-        const { tree } = await response.json();
-        container.innerHTML = tree.filter(item => item.type === 'blob')
-            .map(item => `<div class="file-item p-2 rounded-md flex items-center gap-3 text-sm" data-path="${item.path}"><i class="fas fa-file-code"></i><span>${item.path}</span></div>`).join('');
-    } catch (error) { showError(error.message); }
+        const { tree: fileList } = await response.json();
+
+        // 1. Build the tree structure
+        const fileTree = {};
+        fileList.forEach(item => {
+            if (item.type !== 'blob') return; // Only process files
+            let currentLevel = fileTree;
+            const pathParts = item.path.split('/');
+            pathParts.forEach((part, index) => {
+                if (index === pathParts.length - 1) {
+                    // It's a file
+                    currentLevel[part] = {
+                        __isFile: true,
+                        path: item.path,
+                    };
+                } else {
+                    // It's a directory
+                    if (!currentLevel[part]) {
+                        currentLevel[part] = { __isDirectory: true };
+                    }
+                    currentLevel = currentLevel[part];
+                }
+            });
+        });
+
+        // 2. Generate HTML from the tree structure
+        const generateHtml = (tree) => {
+            const sortedKeys = Object.keys(tree).sort((a, b) => {
+                const aIsFile = tree[a].__isFile;
+                const bIsFile = tree[b].__isFile;
+                if (!aIsFile && bIsFile) return -1; // Directories first
+                if (aIsFile && !bIsFile) return 1;
+                return a.localeCompare(b); // Then sort alphabetically
+            });
+
+            let html = '<ul class="file-tree-ul">';
+            for (const key of sortedKeys) {
+                const node = tree[key];
+                if (node.__isFile) {
+                    html += `
+                        <li class="file-item" data-path="${node.path}">
+                            <i class="fas fa-file-code file-icon"></i>
+                            <span>${key}</span>
+                        </li>`;
+                } else if (node.__isDirectory) {
+                    html += `
+                        <li>
+                            <div class="folder-item">
+                                <i class="fas fa-folder folder-icon"></i>
+                                <span>${key}</span>
+                            </div>
+                            ${generateHtml(node)}
+                        </li>`;
+                }
+            }
+            html += '</ul>';
+            return html;
+        };
+        
+        container.innerHTML = generateHtml(fileTree);
+
+    } catch (error) {
+        showError(error.message);
+        container.innerHTML = '<div class="text-center text-red-400">Could not load file tree.</div>';
+    }
 }
+
 
 // --- MODULE 3: REFACTOR ---
 async function handleRefactorCode() {
@@ -494,11 +549,6 @@ async function handleGenerateImage() {
 }
 
 // --- UI & UTILITY FUNCTIONS ---
-
-/**
- * FIXED: Handles switching modules and rendering content from stored data.
- * @param {string} newModuleId - The ID of the module to switch to (e.g., 'module1').
- */
 function switchModule(newModuleId) {
     if (newModuleId === currentModule) return;
 
@@ -539,7 +589,6 @@ function switchModule(newModuleId) {
 
         currentModule = newModuleId;
         
-        // FIXED: Render the view for the new module if data exists
         renderCurrentModuleView();
 
         newModuleEl.addEventListener('animationend', function handleAnimationIn() {
