@@ -5,13 +5,54 @@ html {
 
 body {
     font-family: 'Roboto', sans-serif;
-    padding-top: 80px; /* Adjust for fixed header */
-    color: #e2e8f0; /* text-gray-200 */
-    background-color: transparent; /* Ensures body is transparent to see the html background */
+    padding-top: 100px; /* Increased padding for new floating header */
+    color: #e2e8f0; 
+    background-color: transparent; 
+    /* ADDED: For opening animation */
+    opacity: 0;
+    transition: opacity 1s ease-in-out;
+}
+
+/* ADDED: Class to trigger body fade-in */
+body.page-loaded {
+    opacity: 1;
 }
 
 h1, h2, h3, h4, h5, h6 {
     font-family: 'Poppins', sans-serif;
+}
+
+/* --- ADDED: Preloader Styles --- */
+#preloader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #0a0e1a;
+    z-index: 10000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: opacity 0.75s ease-in-out, visibility 0.75s ease-in-out;
+}
+
+#preloader.preloader-hidden {
+    opacity: 0;
+    visibility: hidden;
+}
+
+/* Re-styling the spinner for the preloader */
+#preloader .lds-dual-ring:after {
+    width: 96px;
+    height: 96px;
+    border-width: 8px;
+}
+
+
+/* --- 3D Perspective Container --- */
+.container {
+    perspective: 1500px; /* Creates the 3D space */
 }
 
 /* --- Background Canvas --- */
@@ -24,16 +65,24 @@ h1, h2, h3, h4, h5, h6 {
     z-index: -1;
 }
 
-/* --- Main "Glass" Content Containers --- */
+/* --- Main "3D Glass" Content Containers --- */
 main#main-content, #special-feature-container {
-    background-color: rgba(15, 23, 42, 0.65); /* The main semi-transparent panel */
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border: 1px solid rgba(51, 65, 85, 0.7);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0));
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 1rem;
-    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
     padding: 1.5rem;
+    transform: rotateX(10deg) rotateY(-10deg); /* Initial 3D tilt */
+    transform-style: preserve-3d;
+    transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1); /* Smooth transition */
 }
+
+main#main-content:hover, #special-feature-container:hover {
+    transform: rotateX(0) rotateY(0) scale(1.02); /* Flatten and scale up on hover */
+}
+
 
 @media (min-width: 768px) {
     main#main-content, #special-feature-container {
@@ -105,31 +154,70 @@ main#main-content, #special-feature-container {
     100% { transform: rotate(360deg); }
 }
 
-/* --- Header --- */
+/* --- NEW FLOATING & ANIMATED HEADER --- */
 #main-header {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
+    top: 1rem;
+    left: 50%;
+    transform: translateX(-50%) translateZ(0); 
+    width: 95%;
+    max-width: 600px;
     z-index: 1000;
-    padding: 0.75rem 1rem;
-    background-color: rgba(10, 5, 20, 0.85);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border-bottom: 1px solid rgba(126, 34, 206, 0.35);
-    color: white;
-    transform: translateY(-150%);
+    
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0));
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    
+    padding: 0.75rem 1.5rem;
+    animation: header-glow 8s ease-in-out infinite alternate;
+    
+    /* Transition for the snap effect */
+    transition: all 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+}
+
+/* "Thanos Snap" effect class */
+#main-header.header-hidden {
     opacity: 0;
-    animation: coolHeaderAppear 0.5s 0.1s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+    transform: translateX(-50%) translateY(-150%) scale(0.5);
+    filter: blur(10px);
+    pointer-events: none;
 }
 
-@keyframes coolHeaderAppear {
-    0% { transform: translateY(-150%); opacity: 0; }
-    70% { transform: translateY(8px); opacity: 0.9; }
-    100% { transform: translateY(0); opacity: 1; }
+
+.header-content {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.75rem;
 }
 
-/* --- Module Tabs --- */
+.header-content i {
+    font-size: 1.75rem;
+    color: #c084fc;
+    text-shadow: 0 0 15px #c084fc;
+}
+
+.header-content h1 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #e9d5ff;
+    text-shadow: 0 0 8px rgba(192, 132, 252, 0.6), 0 0 20px rgba(167, 139, 250, 0.4);
+}
+
+@keyframes header-glow {
+    from {
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37), 0 0 5px rgba(192, 132, 252, 0.2);
+    }
+    to {
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5), 0 0 20px rgba(192, 132, 252, 0.5);
+    }
+}
+
+
+/* --- Module Tabs & Mobile Menu --- */
 .tab-button {
     transition: all 0.3s ease;
     border-bottom: 2px solid transparent;
@@ -140,24 +228,98 @@ main#main-content, #special-feature-container {
     border-bottom-color: #c084fc;
 }
 
+.mobile-menu-button {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    background-color: rgba(30, 41, 59, 0.7);
+    border: 1px solid #475569;
+    border-radius: 0.5rem;
+    color: #e2e8f0;
+    font-weight: 600;
+}
+
+.mobile-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background-color: #1e293b;
+    border: 1px solid #475569;
+    border-radius: 0.5rem;
+    margin-top: 0.5rem;
+    z-index: 50;
+    overflow: hidden;
+}
+
+.mobile-menu-item {
+    display: block;
+    padding: 0.75rem 1rem;
+    color: #cbd5e1;
+    transition: background-color 0.2s;
+}
+
+.mobile-menu-item:hover {
+    background-color: #334155;
+}
+
+.mobile-menu-item.active {
+    background-color: #4f46e5;
+    color: white;
+}
+
+
 /* --- Module Content Animations --- */
+/* MODIFIED: Removed hardcoded animations to allow for JS control */
 .module-content {
+    /* animation-duration: 0.5s; */
+    /* animation-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94); */
+    /* animation-fill-mode: forwards; */
+}
+
+/* REMOVED old keyframes, they are replaced by more robust ones below */
+/* .fade-in { animation-name: fadeIn; } */
+/* .fade-out { animation-name: fadeOut; } */
+
+/* ADDED: New Keyframes for module switching */
+@keyframes slide-fade-out {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+}
+
+@keyframes slide-fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ADDED: Animation utility classes */
+.animate__animated {
     animation-duration: 0.5s;
-    animation-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    animation-fill-mode: forwards;
+    animation-fill-mode: both;
 }
 
-.fade-in { animation-name: fadeIn; }
-.fade-out { animation-name: fadeOut; }
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+.animate__slideFadeIn {
+    animation-name: slide-fade-in;
+    animation-timing-function: ease-out;
 }
 
-@keyframes fadeOut {
-    from { opacity: 1; transform: translateY(0); }
-    to { opacity: 0; transform: translateY(-10px); }
+.animate__slideFadeOut {
+    animation-name: slide-fade-out;
+    animation-timing-function: ease-in;
 }
 
 

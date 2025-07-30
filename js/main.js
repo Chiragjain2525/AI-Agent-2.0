@@ -10,30 +10,38 @@ let lenis; // For smooth scrolling
 // --- INITIALIZATION ---
 console.log("main.js script started.");
 
-// 1. Wait for the initial HTML document to be ready.
+// ADDED: Create and inject preloader immediately to prevent flash of unstyled content
+document.body.insertAdjacentHTML('afterbegin', `
+    <div id="preloader">
+        <div class="lds-dual-ring"></div>
+    </div>
+`);
+
 document.addEventListener('DOMContentLoaded', () => {
     console.log("DOM fully loaded and parsed.");
-    // 2. Start the process of loading everything else.
     loadApp();
 });
 
 async function loadApp() {
     try {
-        // 3. Wait for external libraries (like THREE, Chart.js) to be available.
         await waitForDependencies();
         console.log("All external libraries are loaded.");
 
-        // 4. Wait for all HTML templates to be fetched and inserted into the page.
         await loadAllTemplates();
         console.log("All HTML templates are loaded.");
 
-        // 5. Now that everything is ready, initialize the application logic.
         initializeApp();
         console.log("Application initialized successfully!");
 
+        // ADDED: Hide preloader after a short delay to allow rendering
+        setTimeout(() => {
+            document.getElementById('preloader')?.classList.add('preloader-hidden');
+        }, 500);
+
     } catch (error) {
         console.error("A critical error occurred during app loading:", error);
-        // Display a user-friendly error on the page itself
+        // ADDED: Hide preloader even if there's an error to not block the error message
+        document.getElementById('preloader')?.classList.add('preloader-hidden');
         document.body.innerHTML = `<div style="color: white; padding: 2rem; text-align: center; font-family: sans-serif;">
             <h1>Application Failed to Load</h1>
             <p>A critical error occurred. Please check the browser's developer console (F12) for more details.</p>
@@ -42,9 +50,6 @@ async function loadApp() {
     }
 }
 
-/**
- * Checks every 100ms if the required external libraries are available on the window object.
- */
 function waitForDependencies() {
     const dependencies = ['THREE', 'Lenis', 'marked', 'Chart'];
     return new Promise((resolve, reject) => {
@@ -55,17 +60,13 @@ function waitForDependencies() {
                 resolve();
             }
         }, 100);
-        // Fail after 10 seconds if libraries don't load
         setTimeout(() => {
             clearInterval(interval);
-            reject(new Error("External libraries took too long to load. Check network connection and CDN links."));
+            reject(new Error("External libraries took too long to load."));
         }, 10000);
     });
 }
 
-/**
- * Loads all HTML templates concurrently and waits for them to complete.
- */
 function loadAllTemplates() {
     const templates = [
         { url: 'templates/header.html', selector: '#header-placeholder' },
@@ -79,9 +80,6 @@ function loadAllTemplates() {
     return Promise.all(loadPromises);
 }
 
-/**
- * Fetches HTML content from a file and loads it into a specified element.
- */
 async function loadHTML(url, selector) {
     const response = await fetch(url);
     if (!response.ok) throw new Error(`Failed to load template ${url}: ${response.statusText}`);
@@ -94,22 +92,39 @@ async function loadHTML(url, selector) {
     }
 }
 
-/**
- * Initializes the application's event listeners and animations.
- */
 function initializeApp() {
     setupThreeJSAnimation();
     setupLenisSmoothScroll();
     initCustomCursorEffect();
     document.getElementById('currentYear').textContent = new Date().getFullYear();
     setupGlobalEventListeners();
+    setupScrollListener();
+
+    // Add a class to the body to trigger entrance animations reliably
+    setTimeout(() => {
+        document.body.classList.add('page-loaded');
+        // Force scroll to the top of the page after everything is loaded
+        if(lenis) {
+            lenis.scrollTo(0, { immediate: true });
+        } else {
+            window.scrollTo(0, 0);
+        }
+    }, 100);
 }
 
 
 // --- EVENT LISTENER SETUP ---
 
 function setupGlobalEventListeners() {
-    // Using event delegation on the body to ensure elements exist when listeners are attached.
+    // Mobile Menu Toggle
+    const mobileMenuButton = document.getElementById('mobile-menu-button');
+    const mobileMenu = document.getElementById('mobile-menu');
+    mobileMenuButton?.addEventListener('click', () => {
+        mobileMenu?.classList.toggle('hidden');
+        mobileMenuButton.querySelector('svg').classList.toggle('rotate-180');
+    });
+
+    // Event delegation for the rest of the app
     document.body.addEventListener('click', (event) => {
         const target = event.target;
         const targetId = target.id;
@@ -118,10 +133,18 @@ function setupGlobalEventListeners() {
         if (targetId === 'analyze-btn') handleAnalyzeClick();
         if (target.closest('.tab-button')) {
             const id = target.closest('.tab-button').id;
+            // The switchModule function now handles the 'active' class
             if (id === 'tab-module1') switchModule('module1');
             if (id === 'tab-module2') switchModule('module2');
             if (id === 'tab-module3') switchModule('module3');
             if (id === 'tab-module4') switchModule('module4');
+        }
+        if (target.closest('.mobile-menu-item')) {
+            event.preventDefault();
+            const module = target.closest('.mobile-menu-item').dataset.module;
+            switchModule(module);
+            mobileMenu?.classList.add('hidden'); // Hide menu after selection
+            mobileMenuButton.querySelector('svg').classList.remove('rotate-180');
         }
         if (targetId === 'backToTopBtn') lenis?.scrollTo(0);
 
@@ -135,13 +158,7 @@ function setupGlobalEventListeners() {
             if (commitMessageInput) commitMessageInput.value = target.textContent;
             showSuccess('Commit message updated!');
         }
-
-        // Module 2 file list
-        const fileItem = target.closest('.file-item');
-        if (fileItem && fileItem.dataset.path) {
-            handleFileClick(fileItem.dataset.path);
-        }
-
+        
         // Module 3 buttons
         if (targetId === 'refactor-code-btn') handleRefactorCode();
         if (targetId === 'copy-refactored-btn') {
@@ -160,6 +177,14 @@ function setupGlobalEventListeners() {
         // Special Feature button
         if (targetId === 'generate-image-btn') handleGenerateImage();
     });
+    
+    // Module 2 file list (specific delegation)
+    document.getElementById('module2-container')?.addEventListener('click', (event) => {
+        const fileItem = event.target.closest('.file-item');
+        if (fileItem && fileItem.dataset.path) {
+            handleFileClick(fileItem.dataset.path);
+        }
+    });
 
     // Listen for file uploads separately
     document.getElementById('data-upload-input')?.addEventListener('change', handleDataUpload);
@@ -168,6 +193,27 @@ function setupGlobalEventListeners() {
     window.addEventListener('scroll', () => {
         document.getElementById('backToTopBtn')?.classList.toggle('show', window.scrollY > 300);
     });
+}
+
+// --- SCROLL LISTENER FOR HEADER ---
+function setupScrollListener() {
+    const header = document.getElementById('main-header');
+    if (!header) return;
+
+    // FIX: This new logic hides the header unless you are at the very top.
+    const scrollHandler = (scrollTop) => {
+        if (scrollTop > 50) { // Hide header if scrolled more than 50px
+            header.classList.add('header-hidden');
+        } else { // Show header if at the top
+            header.classList.remove('header-hidden');
+        }
+    };
+
+    if (lenis) {
+        lenis.on('scroll', (e) => scrollHandler(e.scroll));
+    } else {
+        window.addEventListener('scroll', () => scrollHandler(window.pageYOffset || document.documentElement.scrollTop), false);
+    }
 }
 
 
@@ -292,7 +338,6 @@ function displayLanguageChart(languages) {
     if (!canvas) return;
     if (languageChart) languageChart.destroy();
     
-    // The key change is in the options object below
     languageChart = new window.Chart(canvas.getContext('2d'), {
         type: 'polarArea',
         data: {
@@ -307,7 +352,6 @@ function displayLanguageChart(languages) {
             maintainAspectRatio: false,
             scales: {
                 r: {
-                    // These options add padding and prevent the labels from being cut off
                     pointLabels: {
                         display: true,
                         centerPointLabels: true,
@@ -318,7 +362,7 @@ function displayLanguageChart(languages) {
                         color: '#e2e8f0'
                     },
                     ticks: {
-                        display: false // Hides the radial tick lines (e.g., 1.00, 2.00)
+                        display: false
                     }
                 }
             },
@@ -447,14 +491,71 @@ async function handleGenerateImage() {
 }
 
 // --- UI & UTILITY FUNCTIONS ---
-function switchModule(newModule) {
-    if (newModule === currentModule) return;
-    document.querySelectorAll('.module-content').forEach(c => c.classList.add('hidden'));
-    document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
-    document.getElementById(`${newModule}-container`)?.classList.remove('hidden');
-    document.getElementById(`tab-${newModule}`)?.classList.add('active');
-    currentModule = newModule;
+
+/**
+ * REWRITTEN: Handles switching between modules with smooth animations.
+ * @param {string} newModuleId - The ID of the module to switch to (e.g., 'module1').
+ */
+function switchModule(newModuleId) {
+    if (newModuleId === currentModule) return;
+
+    const tabsContainer = document.querySelector('.tabs-container'); // Assuming a container for tabs
+    const mobileMenuButton = document.getElementById('mobile-menu-button');
+    const currentModuleEl = document.getElementById(`${currentModule}-container`);
+    const newModuleEl = document.getElementById(`${newModuleId}-container`);
+
+    if (!currentModuleEl || !newModuleEl) {
+        console.error(`Module container not found for ${currentModule} or ${newModuleId}`);
+        return;
+    }
+
+    // Disable navigation during transition to prevent glitches
+    tabsContainer?.classList.add('pointer-events-none');
+    mobileMenuButton?.classList.add('pointer-events-none', 'opacity-50');
+
+    // --- Animation Out ---
+    currentModuleEl.classList.add('animate__animated', 'animate__slideFadeOut');
+
+    // Listen for the end of the fade-out animation
+    currentModuleEl.addEventListener('animationend', function handleAnimationOut() {
+        // Clean up old module
+        this.classList.remove('animate__animated', 'animate__slideFadeOut');
+        this.classList.add('hidden');
+        
+        // --- Animation In ---
+        newModuleEl.classList.remove('hidden');
+        newModuleEl.classList.add('animate__animated', 'animate__slideFadeIn');
+
+        // Update active states while the new module is animating in
+        // Update desktop tabs
+        document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+        document.getElementById(`tab-${newModuleId}`)?.classList.add('active');
+
+        // Update mobile menu
+        const mobileMenuTitle = document.getElementById('mobile-menu-title');
+        const mobileMenuItems = document.querySelectorAll('.mobile-menu-item');
+        mobileMenuItems.forEach(item => {
+            item.classList.remove('active');
+            if (item.dataset.module === newModuleId) {
+                item.classList.add('active');
+                if(mobileMenuTitle) mobileMenuTitle.textContent = item.textContent.trim();
+            }
+        });
+
+        // Update the global state
+        currentModule = newModuleId;
+
+        // Listen for the end of the fade-in animation to clean up
+        newModuleEl.addEventListener('animationend', function handleAnimationIn() {
+            this.classList.remove('animate__animated', 'animate__slideFadeIn');
+            // Re-enable navigation
+            tabsContainer?.classList.remove('pointer-events-none');
+            mobileMenuButton?.classList.remove('pointer-events-none', 'opacity-50');
+        }, { once: true });
+
+    }, { once: true }); // Use { once: true } to auto-remove the listener
 }
+
 function setLoadingState(isLoading, message = '') {
     const buttons = document.querySelectorAll('button');
     const loadingSpinner = document.getElementById('loading-spinner');
