@@ -1,69 +1,45 @@
-/**
- * Calls our secure Netlify function to get a response from the Gemini AI.
- * @param {string} prompt - The prompt to send to the AI.
- * @returns {Promise<string>} - The text response from the AI.
- */
-export async function callAIAssistant(prompt) {
-    const response = await fetch('/.netlify/functions/call-ai', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: prompt, type: 'text' }) // Specify type
-    });
+// This file contains all the functions for interacting with external APIs.
 
-    if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to get AI response.');
+// The ExponentialBackoff utility is included here to make the file self-contained.
+class ExponentialBackoff {
+    constructor(maxRetries = 5, initialDelay = 1000) {
+        this.maxRetries = maxRetries;
+        this.initialDelay = initialDelay;
+        this.retries = 0;
     }
 
-    const result = await response.json();
-    if (result.candidates?.[0]?.content?.parts?.[0]?.text) {
-        return result.candidates[0].content.parts[0].text;
-    } else {
-        console.error("Unexpected AI API response structure:", result);
-        throw new Error("The AI failed to generate a valid response.");
-    }
-}
-
-/**
- * Calls our secure Netlify function to generate an image.
- * @param {string} prompt - The prompt for image generation.
- * @param {string|null} [imageData=null] - Optional base64-encoded image data for image editing.
- * @returns {Promise<string>} - The base64-encoded image data URL.
- */
-export async function callImageGenerationAPI(prompt, imageData = null) {
-    const payload = { 
-        prompt: prompt, 
-        type: 'image',
-        imageData: imageData // Send image data if it exists
-    };
-
-    const response = await fetch('/.netlify/functions/call-ai', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-    });
-
-    if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to generate image.');
-    }
-
-    const result = await response.json();
-    if (result.predictions?.[0]?.bytesBase64Encoded) {
-        return `data:image/png;base64,${result.predictions[0].bytesBase64Encoded}`;
-    } else {
-        console.error("Unexpected Image API response structure:", result);
-        throw new Error("The Image AI failed to generate a valid response.");
+    async run(fn) {
+        while (this.retries < this.maxRetries) {
+            try {
+                await fn();
+                return;
+            } catch (error) {
+                this.retries++;
+                if (this.retries >= this.maxRetries) {
+                    throw error;
+                }
+                const delay = this.initialDelay * Math.pow(2, this.retries);
+                console.warn(`Retrying in ${delay}ms due to:`, error.message);
+                await new Promise(resolve => setTimeout(resolve, delay));
+            }
+        }
     }
 }
 
 
+// IMPORTANT: Your API key will be automatically provided by the Canvas environment.
+// Do not paste your own API key here.
+const apiKey = "";
+const textModel = "gemini-2.5-flash-preview-05-20";
+const imageGenModel = "imagen-3.0-generate-002";
+const imageEditModel = "gemini-2.0-flash-preview-image-generation";
+
+
 /**
- * Fetches repository data from the GitHub API. This can remain on the client-side
- * as it does not use a secret key.
+ * Fetches repository data from the GitHub API.
  * @param {string} owner - The owner of the repository.
  * @param {string} repo - The name of the repository.
- * @returns {Promise<object>} - An object containing repository details.
+ * @returns {Promise<object>} An object containing repository details.
  */
 export async function fetchRepoData(owner, repo) {
     const GITHUB_API_BASE = 'https://api.github.com/repos/';
@@ -104,5 +80,150 @@ export async function getFileContent(owner, repo, path) {
     } catch (error) {
         console.warn(`Could not fetch ${path}:`, error);
         return null;
+    }
+}
+
+/**
+ * Calls the Gemini API to generate text based on a given prompt.
+ * Uses exponential backoff for retries.
+ * @param {string} prompt - The text prompt for the AI.
+ * @returns {string} The AI-generated text.
+ */
+export async function callAIAssistant(prompt) {
+    const backoff = new ExponentialBackoff();
+    const payload = { contents: [{ role: "user", parts: [{ text: prompt }] }] };
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${textModel}:generateContent?key=${apiKey}`;
+
+    let response;
+    try {
+        await backoff.run(async () => {
+            response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if (!response.ok) {
+                // If it's a rate limit error, throw to trigger a retry
+                if (response.status === 429) {
+                    throw new Error('Rate limit exceeded. Retrying...');
+                }
+                const errorData = await response.json();
+                throw new Error(errorData.error.message || 'API request failed.');
+            }
+        });
+        const result = await response.json();
+        
+        if (result.candidates && result.candidates.length > 0 &&
+            result.candidates[0].content && result.candidates[0].content.parts &&
+            result.candidates[0].content.parts.length > 0) {
+            return result.candidates[0].content.parts[0].text;
+        } else {
+            throw new Error("Invalid response from API.");
+        }
+    } catch (error) {
+        console.error("Error in callAIAssistant:", error);
+        throw new Error(`AI assistant failed to respond: ${error.message}`);
+    }
+}
+
+
+/**
+ * Calls the Gemini API to generate an image from a text prompt.
+ * @param {string} prompt - The text description for the image.
+ * @returns {string} The data URL of the generated image.
+ */
+export async function callImageGenerationAPI(prompt) {
+    const backoff = new ExponentialBackoff();
+    const payload = {
+        instances: { prompt: prompt },
+        parameters: { "sampleCount": 1 }
+    };
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${imageGenModel}:predict?key=${apiKey}`;
+    
+    let response;
+    try {
+        await backoff.run(async () => {
+            response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if (!response.ok) {
+                if (response.status === 429) {
+                    throw new Error('Rate limit exceeded. Retrying...');
+                }
+                const errorData = await response.json();
+                throw new Error(errorData.error.message || 'API request failed.');
+            }
+        });
+
+        const result = await response.json();
+        const base64Data = result?.predictions?.[0]?.bytesBase64Encoded;
+
+        if (base64Data) {
+            return `data:image/png;base64,${base64Data}`;
+        } else {
+            throw new Error("Invalid response from image generation API.");
+        }
+    } catch (error) {
+        console.error("Error in callImageGenerationAPI:", error);
+        throw new Error(`Image generation failed: ${error.message}`);
+    }
+}
+
+/**
+ * Calls the Gemini API to edit an image based on a text prompt.
+ * @param {string} imageDataBase64 - The base64-encoded image data.
+ * @param {string} prompt - The text prompt for editing the image.
+ * @returns {string} The data URL of the edited image.
+ */
+export async function callImageEditingAPI(imageDataBase64, prompt) {
+    const backoff = new ExponentialBackoff();
+    const payload = {
+        contents: [
+            {
+                role: "user",
+                parts: [
+                    { text: prompt },
+                    {
+                        inlineData: {
+                            mimeType: "image/jpeg", // Assuming JPEG for now
+                            data: imageDataBase64
+                        }
+                    }
+                ]
+            }
+        ],
+    };
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${imageEditModel}:generateContent?key=${apiKey}`;
+
+    let response;
+    try {
+        await backoff.run(async () => {
+            response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if (!response.ok) {
+                if (response.status === 429) {
+                    throw new Error('Rate limit exceeded. Retrying...');
+                }
+                const errorData = await response.json();
+                throw new Error(errorData.error.message || 'API request failed.');
+            }
+        });
+
+        const result = await response.json();
+        const base64Data = result?.candidates?.[0]?.content?.parts?.find(p => p.inlineData)?.inlineData?.data;
+
+        if (base64Data) {
+            return `data:image/png;base64,${base64Data}`;
+        } else {
+            throw new Error("Invalid response from image editing API.");
+        }
+    } catch (error) {
+        console.error("Error in callImageEditingAPI:", error);
+        throw new Error(`Image editing failed: ${error.message}`);
     }
 }
