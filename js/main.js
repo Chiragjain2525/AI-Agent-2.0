@@ -34,6 +34,18 @@ async function loadApp() {
         // Set initial module title on mobile
         updateMobileModuleTitle('module1');
 
+        // Hide the loading overlay after everything is loaded
+        const loadingOverlay = document.getElementById('loading-overlay');
+        if (loadingOverlay) {
+            // Start the smooth transition of Three.js properties
+            smoothThreeJsTransition(); 
+
+            loadingOverlay.classList.add('opacity-0'); // Start fade out
+            setTimeout(() => {
+                loadingOverlay.classList.add('hidden'); // Hide after fade out
+            }, 700); // Match CSS transition duration
+        }
+
     } catch (error) {
         console.error("A critical error occurred during app loading:", error);
         // Display a user-friendly error on the page itself
@@ -101,9 +113,9 @@ async function loadHTML(url, selector) {
  * Initializes the application's event listeners and animations.
  */
 function initializeApp() {
-    setupThreeJSAnimation();
+    setupThreeJSAnimation(); // This is now called early to show during loading
     setupLenisSmoothScroll();
-    initCustomCursorEffect();
+    // initCustomCursorEffect(); // Removed custom cursor effect
     document.getElementById('currentYear').textContent = new Date().getFullYear();
     setupGlobalEventListeners();
 }
@@ -141,7 +153,6 @@ function setupGlobalEventListeners() {
         if (targetId === 'copy-btn') copyToClipboard(rawMarkdownContent, 'Markdown copied to clipboard!');
         if (targetId === 'push-btn') handlePushToGitHub();
         if (targetId === 'improve-readme-btn') handleImproveReadme();
-        if (targetId === 'suggest-commit-btn') handleSuggestCommits();
         if (target.classList.contains('commit-suggestion')) {
             const commitMessageInput = document.getElementById('commit-message');
             if (commitMessageInput) commitMessageInput.value = target.textContent;
@@ -461,14 +472,33 @@ async function handleGenerateImage() {
 // --- UI & UTILITY FUNCTIONS ---
 function switchModule(newModule) {
     if (newModule === currentModule) return;
-    // Hide all module content containers
-    document.querySelectorAll('.module-content').forEach(c => c.classList.add('hidden'));
+
+    const currentModuleContainer = document.getElementById(`${currentModule}-container`);
+    const newModuleContainer = document.getElementById(`${newModule}-container`);
+
+    if (currentModuleContainer && newModuleContainer) {
+        // 1. Fade out current module
+        currentModuleContainer.classList.add('fade-out');
+        currentModuleContainer.classList.remove('fade-in'); // Ensure fade-in is removed for next transition
+
+        // 2. After fade-out, hide current and fade in new
+        setTimeout(() => {
+            currentModuleContainer.classList.add('hidden');
+            currentModuleContainer.classList.remove('fade-out'); // Clean up fade-out class
+
+            newModuleContainer.classList.remove('hidden');
+            newModuleContainer.classList.add('fade-in'); // Add fade-in to new module
+        }, 400); // This duration should match or be slightly less than CSS animation-duration (0.5s)
+
+    } else {
+        // Fallback for no animation or if elements not found
+        document.querySelectorAll('.module-content').forEach(c => c.classList.add('hidden'));
+        document.getElementById(`${newModule}-container`)?.classList.remove('hidden');
+    }
+
     // Deactivate all tab buttons (both desktop and mobile)
     document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
 
-    // Show the selected module's content
-    document.getElementById(`${newModule}-container`)?.classList.remove('hidden');
-    
     // Activate the corresponding tab button (both desktop and mobile)
     document.getElementById(`tab-${newModule}`)?.classList.add('active');
     document.getElementById(`mobile-tab-${newModule}`)?.classList.add('active');
@@ -529,18 +559,58 @@ function setupThreeJSAnimation() {
     renderer.setSize(window.innerWidth, window.innerHeight);
     camera.position.setZ(30);
     const starGeometry = new window.THREE.BufferGeometry();
-    const positions = new Float32Array(6000 * 3);
-    for (let i = 0; i < positions.length; i++) { positions[i] = (Math.random() - 0.5) * 600; }
+    const positions = new Float32Array(15000 * 3); // Significantly increased number of particles
+    const colors = new Float32Array(15000 * 3); // For colored particles
+
+    // Define a few cyberpunk-ish colors
+    const colorPalette = [
+        new window.THREE.Color(0x00FFFF), // Cyan
+        new window.THREE.Color(0xFF00FF), // Magenta
+        new window.THREE.Color(0x00FF00), // Green
+        new window.THREE.Color(0x8A2BE2), // BlueViolet
+        new window.THREE.Color(0x00BFFF)  // Deep Sky Blue
+    ];
+
+    for (let i = 0; i < positions.length; i += 3) {
+        positions[i] = (Math.random() - 0.5) * 800; // X (wider spread)
+        positions[i + 1] = (Math.random() - 0.5) * 800; // Y (wider spread)
+        positions[i + 2] = (Math.random() - 0.5) * 800; // Z (deeper spread)
+
+        // Assign random color from palette
+        const color = colorPalette[Math.floor(Math.random() * colorPalette.length)];
+        colors[i] = color.r;
+        colors[i + 1] = color.g;
+        colors[i + 2] = color.b;
+    }
     starGeometry.setAttribute('position', new window.THREE.BufferAttribute(positions, 3));
-    const stars = new window.THREE.Points(starGeometry, new window.THREE.PointsMaterial({ color: 0xffffff, size: 0.7 }));
+    starGeometry.setAttribute('color', new window.THREE.BufferAttribute(colors, 3)); // Add color attribute
+
+    const stars = new window.THREE.Points(starGeometry, new window.THREE.PointsMaterial({ 
+        vertexColors: true, // Enable vertex colors
+        size: 1.5, // Slightly larger particles
+        transparent: true,
+        opacity: 0.9, // More opaque
+        blending: window.THREE.AdditiveBlending // For glow effect
+    }));
     scene.add(stars);
+
+    // Make scene, camera, and stars accessible globally for loading animation control
+    window.loadingScene = { scene, camera, renderer, stars }; // Removed animateLoading flag
+
     let mouseX = 0, mouseY = 0;
-    document.addEventListener('mousemove', (e) => { mouseX = e.clientX; mouseY = e.clientY; });
+    document.addEventListener('mousemove', (e) => { 
+        mouseX = (e.clientX / window.innerWidth) * 2 - 1; // Normalize to -1 to +1
+        mouseY = -(e.clientY / window.innerHeight) * 2 + 1; // Normalize to -1 to +1
+    });
+
     const animate = (time) => {
-        stars.rotation.y += 0.0001;
-        camera.position.x += (mouseX - camera.position.x * 200) * 0.0001;
-        camera.position.y += (-mouseY - camera.position.y * 200) * 0.0001;
-        camera.lookAt(scene.position);
+        // Always run the normal background animation logic
+        stars.rotation.y += 0.0005; 
+        stars.rotation.x += 0.0002;
+        camera.position.x += (mouseX * 10 - camera.position.x) * 0.02; 
+        camera.position.y += (mouseY * 10 - camera.position.y) * 0.02; 
+        
+        camera.lookAt(scene.position); // Always look at the center
         renderer.render(scene, camera);
         lenis?.raf(time);
         requestAnimationFrame(animate);
@@ -552,6 +622,43 @@ function setupThreeJSAnimation() {
         renderer.setSize(window.innerWidth, window.innerHeight);
     });
 }
+
+// Function to smoothly transition Three.js properties for loading screen
+function smoothThreeJsTransition() {
+    if (!window.loadingScene) return;
+
+    // Set initial loading state properties
+    window.loadingScene.camera.position.z = 15;
+    window.loadingScene.stars.material.size = 2;
+    
+    // Animate these properties to their normal values
+    const targetZ = 30;
+    const targetSize = 1.5;
+    const duration = 1500; // 1.5 seconds for the transition
+    const startTime = performance.now();
+
+    function interpolate() {
+        const elapsed = performance.now() - startTime;
+        const progress = Math.min(elapsed / duration, 1); // Clamp between 0 and 1
+        const easedProgress = 0.5 - Math.cos(progress * Math.PI) / 2; // Ease-in-out easing
+
+        // Interpolate camera Z position
+        window.loadingScene.camera.position.z = 15 + (targetZ - 15) * easedProgress;
+        // Interpolate particle size
+        window.loadingScene.stars.material.size = 2 + (targetSize - 2) * easedProgress;
+
+        // Animate loading rotation (this will blend into normal rotation)
+        window.loadingScene.stars.rotation.y += 0.01 * (1 - easedProgress); // Slow down rotation
+        window.loadingScene.stars.rotation.x += 0.005 * (1 - easedProgress); // Slow down rotation
+
+        if (progress < 1) {
+            requestAnimationFrame(interpolate);
+        }
+    }
+    requestAnimationFrame(interpolate);
+}
+
+
 function setupLenisSmoothScroll() { if (typeof window.Lenis !== 'undefined') lenis = new window.Lenis(); }
 function initCustomCursorEffect() {
     const colors = ["#a855f7", "#c084fc", "#e9d5ff", "#ffffff"];

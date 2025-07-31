@@ -24,6 +24,22 @@ h1, h2, h3, h4, h5, h6 {
     z-index: -1;
 }
 
+/* --- New 3D Content Wrapper --- */
+#content-wrapper-3d {
+    /* Removed rotateX and rotateY transforms here, only translateY for float */
+    transform: translateY(0px); 
+    transition: transform 0.5s ease-in-out; /* Smooth transition for hover/float */
+    /* Apply floating animation */
+    animation: floatAnimation 4s ease-in-out infinite; /* Adjusted duration for smoother, more noticeable float */
+    z-index: 1; /* Ensure it's above other elements if needed */
+}
+
+#content-wrapper-3d:hover {
+    /* Maintain no tilt, only lift on hover */
+    transform: translateY(-5px); 
+}
+
+
 /* --- Main "Glass" Content Containers --- */
 main#main-content, #special-feature-container {
     background-color: rgba(15, 23, 42, 0.65); /* The main semi-transparent panel */
@@ -38,20 +54,17 @@ main#main-content, #special-feature-container {
         inset 0 0 20px rgba(192, 132, 252, 0.08), /* More noticeable inner light for depth */
         0 0 0 2px rgba(126, 34, 206, 0.3); /* Thin, subtle outer border glow */
     padding: 1.5rem;
-    transition: all 0.5s ease-in-out; /* Smooth transition for all properties on hover/active */
-    /* Added subtle tilt for 3D effect */
-    transform: perspective(1000px) rotateX(2deg) rotateY(-2deg) translateY(0); 
 }
 
-/* Optional: Add a subtle hover effect to the main containers for more dynamism */
-main#main-content:hover, #special-feature-container:hover {
-    /* Straighten and lift slightly on hover */
-    transform: perspective(1000px) rotateX(0deg) rotateY(0deg) translateY(-5px); 
-    box-shadow: 
-        0 15px 30px rgba(0, 0, 0, 0.8), /* Even stronger shadow on hover */
-        0 0 60px rgba(167, 139, 250, 0.3), /* Brighter, wider glow on hover */
-        inset 0 0 30px rgba(192, 132, 252, 0.1),
-        0 0 0 3px rgba(126, 34, 206, 0.5);
+/* Ensure inputs/textareas inside the boxes don't inherit or reset the parent's transform */
+main#main-content input, 
+main#main-content textarea,
+#special-feature-container input,
+#special-feature-container textarea {
+    /* Reset any potential inherited transforms or z-index issues */
+    transform: none; 
+    position: relative; /* Ensure they render correctly within the 3D context */
+    z-index: 1; /* Bring them above any potential shadow rendering issues */
 }
 
 
@@ -103,26 +116,7 @@ main#main-content:hover, #special-feature-container:hover {
 
 /* --- Loading Spinner --- */
 .lds-dual-ring {
-    display: inline-block;
-    width: 80px;
-    height: 80px;
-}
-
-.lds-dual-ring:after {
-    content: " ";
-    display: block;
-    width: 64px;
-    height: 64px;
-    margin: 8px;
-    border-radius: 50%;
-    border: 6px solid #818cf8;
-    border-color: #818cf8 transparent #818cf8 transparent;
-    animation: lds-dual-ring 1.2s linear infinite;
-}
-
-@keyframes lds-dual-ring {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    display: none; /* Hide the old spinner */
 }
 
 /* --- Header --- */
@@ -216,6 +210,81 @@ main#main-content:hover, #special-feature-container:hover {
 @keyframes fadeOut {
     from { opacity: 1; transform: translateY(0); }
     to { opacity: 0; transform: translateY(-10px); }
+}
+
+
+/* --- Floating Animation Keyframes --- */
+@keyframes floatAnimation {
+    0% {
+        transform: translateY(0px); /* Removed rotation, only vertical float */
+    }
+    50% {
+        transform: translateY(-35px); /* Increased float height significantly */
+    }
+    100% {
+        transform: translateY(0px); /* Removed rotation, only vertical float */
+    }
+}
+
+/* --- Cyberpunk Loading Screen Styles --- */
+#loading-overlay {
+    background-color: #0a0a0a; /* Dark background */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 9999;
+    opacity: 1;
+    transition: opacity 0.7s ease-out; /* Smooth fade out */
+    /* Added subtle scanline effect */
+    background-image: 
+        linear-gradient(rgba(0, 255, 255, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 255, 255, 0.05) 1px, transparent 1px);
+    background-size: 3px 3px;
+    /* Added CRT scanline animation */
+    animation: scanlines 8s linear infinite;
+    /* Added a subtle noise overlay */
+    &::before { /* Moved noise to a pseudo-element for better control */
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: repeating-linear-gradient(
+            0deg,
+            rgba(0, 0, 0, 0.1) 0px,
+            rgba(0, 0, 0, 0.1) 1px,
+            transparent 1px,
+            transparent 2px
+        );
+        opacity: 0.1;
+        animation: noise 0.5s steps(2) infinite;
+        pointer-events: none;
+    }
+}
+
+#loading-overlay.hidden {
+    opacity: 0;
+    pointer-events: none; /* Allows clicks through once hidden */
+}
+
+/* Removed .cyber-loader and .cyber-text styles as they are no longer needed */
+/* Removed text-specific glitch and neon glow keyframes as they are no longer needed */
+
+@keyframes scanlines {
+    0% { background-position: 0% 0%; }
+    100% { background-position: 0% 100%; }
+}
+
+@keyframes noise {
+    0% { background-position: 0 0; }
+    100% { background-position: 100% 100%; }
 }
 
 
