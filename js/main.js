@@ -1,4 +1,4 @@
-import { fetchRepoData, getFileContent, callAIAssistant, callImageGenerationAPI } from './api.js';
+import { fetchRepoData, getFileContent, callAIAssistant, callImageGenerationAPI, callImageEditingAPI } from './api.js';
 
 // --- GLOBAL STATE ---
 let currentModule = 'module1';
@@ -6,6 +6,7 @@ let currentRepoPath = null;
 let rawMarkdownContent = '';
 let languageChart = null;
 let lenis; // For smooth scrolling
+let uploadedImageData = null; // New global state for uploaded image
 
 // --- INITIALIZATION ---
 console.log("main.js script started.");
@@ -184,10 +185,12 @@ function setupGlobalEventListeners() {
 
         // Special Feature button
         if (targetId === 'generate-image-btn') handleGenerateImage();
+        if (targetId === 'edit-image-btn') handleEditImage();
     });
 
     // Listen for file uploads separately
     document.getElementById('data-upload-input')?.addEventListener('change', handleDataUpload);
+    document.getElementById('image-upload-input')?.addEventListener('change', handleImageUpload);
     
     // Scroll listener for back-to-top button
     window.addEventListener('scroll', () => {
@@ -438,13 +441,52 @@ function handleExecuteCode() {
 }
 
 // --- SPECIAL FEATURE: IMAGE ---
+
+function handleImageUpload(event) {
+    const file = event.target.files[0];
+    const fileNameElement = document.getElementById('uploaded-file-name');
+    const imagePreviewContainer = document.getElementById('uploaded-image-preview-container');
+    const imagePreview = document.getElementById('uploaded-image-preview');
+    const generateBtn = document.getElementById('generate-image-btn');
+    const editBtn = document.getElementById('edit-image-btn');
+    
+    if (file) {
+        fileNameElement.textContent = file.name;
+        imagePreviewContainer.classList.remove('hidden');
+        editBtn.classList.remove('hidden');
+        generateBtn.classList.add('hidden');
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const base64String = e.target.result;
+            imagePreview.src = base64String;
+            // Store the base64 data without the prefix for the API call
+            uploadedImageData = base64String.split(',')[1];
+        };
+        reader.readAsDataURL(file);
+    } else {
+        fileNameElement.textContent = 'No file chosen';
+        imagePreviewContainer.classList.add('hidden');
+        editBtn.classList.add('hidden');
+        generateBtn.classList.remove('hidden');
+        uploadedImageData = null;
+    }
+    // Clear any previously generated images
+    document.getElementById('generated-image-container')?.classList.add('hidden');
+}
+
 async function handleGenerateImage() {
     const prompt = document.getElementById('image-prompt-input').value.trim();
     if (!prompt) return showError('Please enter an image description.');
-    setLoadingState(true, 'AI is generating your image...');
+    
     const container = document.getElementById('generated-image-container');
+    const loadingMessage = document.getElementById('image-loading-message');
+    
+    setLoadingState(true, 'AI is generating your image...');
     if(container) container.classList.add('hidden');
+    
     try {
+        loadingMessage.textContent = 'AI is generating your image...';
         const imageUrl = await callImageGenerationAPI(prompt);
         const img = document.getElementById('generated-image-output');
         const link = document.getElementById('download-image-btn');
@@ -454,7 +496,42 @@ async function handleGenerateImage() {
             link.classList.remove('disabled-link');
         }
         if (container) container.classList.remove('hidden');
-    } catch (error) { showError(error.message); } finally { setLoadingState(false); }
+        showSuccess("Image generated successfully!");
+    } catch (error) { 
+        showError(error.message); 
+    } finally { 
+        setLoadingState(false); 
+    }
+}
+
+async function handleEditImage() {
+    const prompt = document.getElementById('image-prompt-input').value.trim();
+    if (!prompt) return showError('Please enter an editing instruction.');
+    if (!uploadedImageData) return showError('Please upload an image to edit.');
+
+    const container = document.getElementById('generated-image-container');
+    const loadingMessage = document.getElementById('image-loading-message');
+    
+    setLoadingState(true, 'AI is editing your image...');
+    if(container) container.classList.add('hidden');
+    
+    try {
+        loadingMessage.textContent = 'AI is editing your image...';
+        const imageUrl = await callImageEditingAPI(prompt, uploadedImageData);
+        const img = document.getElementById('generated-image-output');
+        const link = document.getElementById('download-image-btn');
+        if (img) img.src = imageUrl;
+        if (link) {
+            link.href = imageUrl;
+            link.classList.remove('disabled-link');
+        }
+        if (container) container.classList.remove('hidden');
+        showSuccess("Image edited successfully!");
+    } catch (error) {
+        showError(error.message);
+    } finally {
+        setLoadingState(false);
+    }
 }
 
 // --- UI & UTILITY FUNCTIONS ---
@@ -522,8 +599,14 @@ function updateMobileModuleTitle(module) {
 
 function setLoadingState(isLoading, message = '') {
     const buttons = document.querySelectorAll('button');
-    const loadingSpinner = document.getElementById('loading-spinner');
-    buttons.forEach(btn => { btn.disabled = isLoading; btn.classList.toggle('opacity-50', isLoading); btn.classList.toggle('cursor-not-allowed', isLoading); });
+    const loadingSpinner = document.getElementById('image-loading-spinner');
+    buttons.forEach(btn => { 
+        if (btn.id !== 'image-upload-btn') { // Exclude the image upload button from being disabled
+            btn.disabled = isLoading; 
+            btn.classList.toggle('opacity-50', isLoading); 
+            btn.classList.toggle('cursor-not-allowed', isLoading); 
+        }
+    });
     if (loadingSpinner) {
         loadingSpinner.classList.toggle('hidden', !isLoading);
         loadingSpinner.querySelector('p').textContent = message;

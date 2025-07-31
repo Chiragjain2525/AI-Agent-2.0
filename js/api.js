@@ -43,10 +43,38 @@ export async function callImageGenerationAPI(prompt) {
 
     const result = await response.json();
     if (result.predictions?.[0]?.bytesBase64Encoded) {
-        return `data:image/png;base64,${result.predictions[0].bytesBase64Encoded}`;
+        return `data:image/image/jpeg;base64,${result.predictions[0].bytesBase64Encoded}`;
     } else {
         console.error("Unexpected Image API response structure:", result);
         throw new Error("The Image AI failed to generate a valid response.");
+    }
+}
+
+/**
+ * Calls our secure Netlify function to edit an image based on a prompt.
+ * @param {string} prompt - The prompt for image editing.
+ * @param {string} base64Image - The base64-encoded image data.
+ * @returns {Promise<string>} - The base64-encoded image data URL of the edited image.
+ */
+export async function callImageEditingAPI(prompt, base64Image) {
+    const response = await fetch('/.netlify/functions/call-ai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: prompt, type: 'image_edit', image: base64Image }) // Specify type
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to edit image.');
+    }
+
+    const result = await response.json();
+    if (result.candidates?.[0]?.content?.parts?.find(p => p.inlineData)?.inlineData?.data) {
+        const base64Data = result.candidates[0].content.parts.find(p => p.inlineData).inlineData.data;
+        return `data:image/png;base64,${base64Data}`;
+    } else {
+        console.error("Unexpected Image Editing API response structure:", result);
+        throw new Error("The Image Editing AI failed to generate a valid response.");
     }
 }
 
@@ -99,3 +127,4 @@ export async function getFileContent(owner, repo, path) {
         return null;
     }
 }
+

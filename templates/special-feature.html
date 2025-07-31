@@ -1,20 +1,53 @@
-<div id="image-generator-section">
-    <h2 class="text-2xl font-bold text-gray-50 mb-4">Special Feature: AI Image Generator</h2>
-    <p class="text-sm text-gray-400 mb-4">Enter a detailed description of the image you want to generate.</p>
+<div id="image-generator-section" class="space-y-6">
+    <h2 class="text-2xl font-bold text-gray-50 text-glow">Special Feature: AI Image Generator & Editor</h2>
 
-    <label for="image-prompt-input" class="block text-sm font-medium text-purple-200 mb-2">Image Description (Prompt):</label>
-    <textarea id="image-prompt-input" class="w-full h-32 px-4 py-2 text-gray-50 bg-slate-800/50 border border-slate-600 rounded-lg focus:ring-2 focus:ring-indigo-500 mb-4" placeholder="e.g., 'A futuristic city at sunset with flying cars, highly detailed, cyberpunk style'"></textarea>
-
-    <button id="generate-image-btn" class="w-full text-white font-semibold px-6 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 focus:ring-offset-slate-900 btn-animated-glow mb-4">
-        Generate Image 🖼️
-    </button>
-
-    <div id="image-loading-spinner" class="hidden text-center py-6">
-        <div class="lds-dual-ring"></div>
-        <p class="mt-4 text-gray-400 font-medium">AI is generating your image...</p>
+    <!-- Image Upload Section -->
+    <div class="p-6 bg-slate-800/50 border border-slate-700 rounded-lg shadow-xl">
+        <label for="image-upload-input" class="block text-sm font-medium text-purple-200 mb-2">
+            Upload an Image to Edit (Optional)
+        </label>
+        <div class="flex items-center space-x-4">
+            <label for="image-upload-input" class="cursor-pointer bg-slate-700/70 hover:bg-slate-700 transition-colors duration-200 text-white font-semibold py-2 px-4 rounded-lg flex items-center space-x-2">
+                <i class="fas fa-upload"></i>
+                <span>Choose File</span>
+            </label>
+            <span id="uploaded-file-name" class="text-sm text-gray-400 truncate">No file chosen</span>
+            <input type="file" id="image-upload-input" class="hidden" accept="image/*">
+        </div>
+        <div id="uploaded-image-preview-container" class="hidden mt-4 text-center p-4 border border-dashed border-slate-600 rounded-lg">
+            <h4 class="text-lg font-semibold text-gray-300 mb-2">Image Preview</h4>
+            <img id="uploaded-image-preview" src="" alt="Uploaded Image Preview" class="max-w-full h-auto max-h-64 rounded-lg shadow-md mx-auto">
+        </div>
     </div>
 
-    <div id="generated-image-container" class="hidden mt-6">
+    <hr class="border-slate-700">
+
+    <!-- Prompt Section -->
+    <div class="space-y-4">
+        <label for="image-prompt-input" class="block text-sm font-medium text-purple-200 mb-2">
+            Image Description or Edit Instruction
+        </label>
+        <textarea id="image-prompt-input" class="w-full h-32 px-4 py-2 text-gray-50 bg-slate-800/50 border border-slate-600 rounded-lg focus:ring-2 focus:ring-indigo-500" placeholder="e.g., 'A futuristic city at sunset with flying cars, highly detailed, cyberpunk style' or 'change the car in the image to a spaceship'"></textarea>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="flex flex-col sm:flex-row gap-4">
+        <button id="generate-image-btn" class="flex-1 w-full text-white font-semibold px-6 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 focus:ring-offset-slate-900 btn-animated-glow">
+            Generate Image 🖼️
+        </button>
+        <button id="edit-image-btn" class="flex-1 w-full text-white font-semibold px-6 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 focus:ring-offset-slate-900 bg-indigo-600 hover:bg-indigo-700 transition-colors duration-200 hidden">
+            Edit Image 🪄
+        </button>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div id="image-loading-spinner" class="hidden text-center py-6">
+        <div class="lds-dual-ring"></div>
+        <p id="image-loading-message" class="mt-4 text-gray-400 font-medium">AI is generating your image...</p>
+    </div>
+
+    <!-- Generated/Edited Image Container -->
+    <div id="generated-image-container" class="hidden mt-6 p-6 bg-slate-800/50 border border-slate-700 rounded-lg shadow-xl">
         <div class="flex flex-col md:flex-row justify-between md:items-center mb-4 gap-4">
             <h3 class="text-xl font-bold text-gray-50">Generated Image</h3>
             <a id="download-image-btn" href="#" download="ai-generated-image.png" class="bg-green-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-200 w-full md:w-auto disabled-link">
