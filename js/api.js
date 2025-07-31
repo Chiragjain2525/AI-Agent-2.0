@@ -129,6 +129,7 @@ export async function fetchRepoData(owner, repo) {
  * Fetches the content of a specific file from a GitHub repository.
  * @param {string} owner - The owner of the repository.
  * @param {string} repo - The name of the repository.
+ * @param {string} path - The path to the file within the repository.
  * @returns {Promise<string|null>} - The decoded content of the file, or null if not found.
  */
 export async function getFileContent(owner, repo, path) {

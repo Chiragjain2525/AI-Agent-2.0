@@ -19,18 +19,34 @@ exports.handler = async (event) => {
 
         // Parse the data sent from the client-side api.js
         const body = JSON.parse(event.body);
-        const { prompt, type } = body;
+        const { prompt, type, image } = body;
 
         let apiUrl;
         let apiPayload;
+        let model;
 
         // Determine which Google API to call based on the 'type'
         if (type === 'text') {
-            apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+            model = 'gemini-2.5-flash-preview-05-20';
+            apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
             apiPayload = { contents: [{ role: "user", parts: [{ text: prompt }] }] };
         } else if (type === 'image') {
-            apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`;
+            model = 'imagen-3.0-generate-002';
+            apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:predict?key=${apiKey}`;
             apiPayload = { instances: { prompt: prompt }, parameters: { "sampleCount": 1 } };
+        } else if (type === 'image_edit') {
+            model = 'gemini-2.0-flash-preview-image-generation';
+            apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+            apiPayload = {
+                contents: [{
+                    parts: [{ text: prompt }, {
+                        inlineData: {
+                            mimeType: "image/jpeg", // Assuming all images are sent as JPEGs
+                            data: image
+                        }
+                    }]
+                }]
+            };
         } else {
             return { statusCode: 400, body: 'Invalid request type specified.' };
         }
@@ -44,7 +60,7 @@ exports.handler = async (event) => {
 
         if (!response.ok) {
             const errorBody = await response.text();
-            console.error('Google API Error:', errorBody);
+            console.error(`Google API Error for model ${model}:`, errorBody);
             return { statusCode: response.status, body: `Google API Error: ${errorBody}` };
         }
 
