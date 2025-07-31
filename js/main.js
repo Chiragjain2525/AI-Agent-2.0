@@ -559,22 +559,31 @@ function setupThreeJSAnimation() {
     renderer.setSize(window.innerWidth, window.innerHeight);
     camera.position.setZ(30);
     const starGeometry = new window.THREE.BufferGeometry();
-    const positions = new Float32Array(15000 * 3); // Significantly increased number of particles
-    const colors = new Float32Array(15000 * 3); // For colored particles
+    // Significantly increased number of particles for a denser effect
+    const numParticles = 50000; 
+    const positions = new Float32Array(numParticles * 3); 
+    const colors = new Float32Array(numParticles * 3); 
 
-    // Define a few cyberpunk-ish colors
+    // Define a few space-themed colors
     const colorPalette = [
-        new window.THREE.Color(0x00FFFF), // Cyan
-        new window.THREE.Color(0xFF00FF), // Magenta
-        new window.THREE.Color(0x00FF00), // Green
-        new window.THREE.Color(0x8A2BE2), // BlueViolet
-        new window.THREE.Color(0x00BFFF)  // Deep Sky Blue
+        new window.THREE.Color(0xFFFFFF), // White
+        new window.THREE.Color(0xF0F8FF), // AliceBlue
+        new window.THREE.Color(0xE0FFFF), // LightCyan
+        new window.THREE.Color(0xADD8E6), // LightBlue
+        new window.THREE.Color(0x87CEEB), // SkyBlue
+        new window.THREE.Color(0x6495ED), // CornflowerBlue
+        new window.THREE.Color(0x4682B4), // SteelBlue
+        new window.THREE.Color(0x8A2BE2), // BlueViolet (for subtle nebulae)
+        new window.THREE.Color(0xFFC0CB), // Pink (for subtle nebulae)
+        new window.THREE.Color(0xFFA07A), // LightSalmon (for subtle nebulae)
+        new window.THREE.Color(0xFFFFE0)  // LightYellow
     ];
 
     for (let i = 0; i < positions.length; i += 3) {
-        positions[i] = (Math.random() - 0.5) * 800; // X (wider spread)
-        positions[i + 1] = (Math.random() - 0.5) * 800; // Y (wider spread)
-        positions[i + 2] = (Math.random() - 0.5) * 800; // Z (deeper spread)
+        // Wider and deeper spread for particles
+        positions[i] = (Math.random() - 0.5) * 1000; // X 
+        positions[i + 1] = (Math.random() - 0.5) * 1000; // Y 
+        positions[i + 2] = (Math.random() - 0.5) * 1000; // Z 
 
         // Assign random color from palette
         const color = colorPalette[Math.floor(Math.random() * colorPalette.length)];
@@ -587,7 +596,7 @@ function setupThreeJSAnimation() {
 
     const stars = new window.THREE.Points(starGeometry, new window.THREE.PointsMaterial({ 
         vertexColors: true, // Enable vertex colors
-        size: 1.5, // Slightly larger particles
+        size: 2, // Slightly larger particles
         transparent: true,
         opacity: 0.9, // More opaque
         blending: window.THREE.AdditiveBlending // For glow effect
@@ -595,7 +604,7 @@ function setupThreeJSAnimation() {
     scene.add(stars);
 
     // Make scene, camera, and stars accessible globally for loading animation control
-    window.loadingScene = { scene, camera, renderer, stars }; // Removed animateLoading flag
+    window.loadingScene = { scene, camera, renderer, stars }; 
 
     let mouseX = 0, mouseY = 0;
     document.addEventListener('mousemove', (e) => { 
@@ -604,11 +613,27 @@ function setupThreeJSAnimation() {
     });
 
     const animate = (time) => {
-        // Always run the normal background animation logic
+        // Subtle rotation
         stars.rotation.y += 0.0005; 
         stars.rotation.x += 0.0002;
-        camera.position.x += (mouseX * 10 - camera.position.x) * 0.02; 
-        camera.position.y += (mouseY * 10 - camera.position.y) * 0.02; 
+
+        const positionsArray = stars.geometry.attributes.position.array;
+        const particleSpeed = 0.5; // How fast particles move towards the camera
+        const zDepth = 1000; // Total depth of the particle field (from -500 to 500)
+
+        for (let i = 2; i < positionsArray.length; i += 3) { // Iterate over Z coordinates
+            positionsArray[i] += particleSpeed; // Move particle forward
+
+            // If particle moves past the camera's front plane, reset it to the back
+            if (positionsArray[i] > camera.position.z + (zDepth / 2)) {
+                positionsArray[i] -= zDepth; // Wrap around to the far end of the depth range
+            }
+        }
+        stars.geometry.attributes.position.needsUpdate = true; // Crucial for Three.js to re-render updated positions
+
+        // Enhanced camera movement based on mouse
+        camera.position.x += (mouseX * 20 - camera.position.x) * 0.05; 
+        camera.position.y += (mouseY * 20 - camera.position.y) * 0.05; 
         
         camera.lookAt(scene.position); // Always look at the center
         renderer.render(scene, camera);
