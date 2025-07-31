@@ -1,4 +1,4 @@
-import { fetchRepoData, getFileContent, callAIAssistant, callImageGenerationAPI, callImageEditingAPI } from './api.js';
+import { fetchRepoData, getFileContent, callAIAssistant, callImageGenerationAPI } from './api.js';
 
 // --- GLOBAL STATE ---
 let currentModule = 'module1';
@@ -6,8 +6,6 @@ let currentRepoPath = null;
 let rawMarkdownContent = '';
 let languageChart = null;
 let lenis; // For smooth scrolling
-let uploadedData = null; // Used for Module 4
-let uploadedImageFile = null; // To store the uploaded image file object for editing
 
 // --- INITIALIZATION ---
 console.log("main.js script started.");
@@ -33,11 +31,15 @@ async function loadApp() {
         initializeApp();
         console.log("Application initialized successfully!");
 
+        // Set initial module title on mobile
+        updateMobileModuleTitle('module1');
+
         // Hide the loading overlay after everything is loaded
         const loadingOverlay = document.getElementById('loading-overlay');
         if (loadingOverlay) {
             // Start the smooth transition of Three.js properties
             smoothThreeJsTransition(); 
+
             // Add 'opacity-0' class to start the fade-out transition
             loadingOverlay.classList.add('opacity-0'); 
             
@@ -114,9 +116,8 @@ async function loadHTML(url, selector) {
  * Initializes the application's event listeners and animations.
  */
 function initializeApp() {
-    setupThreeJSAnimation();
+    setupThreeJSAnimation(); // This is now called early to show during loading
     setupLenisSmoothScroll();
-    initCustomCursorEffect();
     document.getElementById('currentYear').textContent = new Date().getFullYear();
     setupGlobalEventListeners();
 }
@@ -154,7 +155,6 @@ function setupGlobalEventListeners() {
         if (targetId === 'copy-btn') copyToClipboard(rawMarkdownContent, 'Markdown copied to clipboard!');
         if (targetId === 'push-btn') handlePushToGitHub();
         if (targetId === 'improve-readme-btn') handleImproveReadme();
-        if (targetId === 'suggest-commit-btn') handleSuggestCommits();
         if (target.classList.contains('commit-suggestion')) {
             const commitMessageInput = document.getElementById('commit-message');
             if (commitMessageInput) commitMessageInput.value = target.textContent;
@@ -182,15 +182,12 @@ function setupGlobalEventListeners() {
             copyToClipboard(code, 'Generated code copied to clipboard!');
         }
 
-        // Special Feature buttons - consolidated into one handler
-        if (targetId === 'generate-image-btn' || targetId === 'edit-image-btn') {
-            handleImageAction(targetId);
-        }
+        // Special Feature button
+        if (targetId === 'generate-image-btn') handleGenerateImage();
     });
 
     // Listen for file uploads separately
     document.getElementById('data-upload-input')?.addEventListener('change', handleDataUpload);
-    document.getElementById('image-upload-input')?.addEventListener('change', handleImageUpload);
     
     // Scroll listener for back-to-top button
     window.addEventListener('scroll', () => {
@@ -277,21 +274,7 @@ async function handleImproveReadme() {
         showSuccess("README has been improved!");
     } catch (error) { showError(error.message); } finally { setLoadingState(false); }
 }
-async function handleSuggestCommits() {
-    setLoadingState(true, 'AI is suggesting commit messages...');
-    const container = document.getElementById('commit-suggestions-container');
-    if(container) container.classList.add('hidden');
-    try {
-        const prompt = `Based on this README.md, generate 3-5 Conventional Commit messages. Provide ONLY the messages, each on a new line. README:\n---\n${rawMarkdownContent}\n---`;
-        const suggestionsText = await callAIAssistant(prompt);
-        const suggestions = suggestionsText.split('\n').filter(s => s.trim());
-        if (container && suggestions.length) {
-            container.innerHTML = `<p class="text-sm font-semibold text-gray-300 mb-2">Click a suggestion to use it:</p>` + 
-                suggestions.map(s => `<div class="p-2 rounded-md bg-slate-700/50 text-gray-200 text-sm font-mono commit-suggestion">${s.replace(/^-/, '').trim()}</div>`).join('');
-            container.classList.remove('hidden');
-        } else { showError("AI couldn't generate suggestions."); }
-    } catch (error) { showError(error.message); } finally { setLoadingState(false); }
-}
+
 async function handlePushToGitHub() {
     const token = document.getElementById('github-token').value.trim();
     const message = document.getElementById('commit-message').value.trim();
@@ -320,6 +303,7 @@ function displayLanguageChart(languages) {
     if (!canvas) return;
     if (languageChart) languageChart.destroy();
     
+    // The key change is in the options object below
     languageChart = new window.Chart(canvas.getContext('2d'), {
         type: 'polarArea',
         data: {
@@ -334,6 +318,7 @@ function displayLanguageChart(languages) {
             maintainAspectRatio: false,
             scales: {
                 r: {
+                    // These options add padding and prevent the labels from being cut off
                     pointLabels: {
                         display: true,
                         centerPointLabels: true,
@@ -344,7 +329,7 @@ function displayLanguageChart(languages) {
                         color: '#e2e8f0'
                     },
                     ticks: {
-                        display: false
+                        display: false // Hides the radial tick lines (e.g., 1.00, 2.00)
                     }
                 }
             },
@@ -402,7 +387,7 @@ function handleDataUpload(event) {
         try {
             const lines = e.target.result.trim().split('\n');
             const headers = lines[0].split(',').map(h => h.trim());
-            uploadedData = lines.slice(1).map(line => {
+            window.uploadedData = lines.slice(1).map(line => {
                 const values = line.split(',').map(v => v.trim());
                 return headers.reduce((obj, header, i) => ({ ...obj, [header]: values[i] }), {});
             });
@@ -410,7 +395,7 @@ function handleDataUpload(event) {
             const previewHtml = `
                 <table class="data-preview-table">
                     <thead><tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr></thead>
-                    <tbody>${uploadedData.slice(0, 5).map(row => `<tr>${headers.map(h => `<td>${row[h]}</td>`).join('')}</tr>`).join('')}</tbody>
+                    <tbody>${window.uploadedData.slice(0, 5).map(row => `<tr>${headers.map(h => `<td>${row[h]}</td>`).join('')}</tr>`).join('')}</tbody>
                 </table>`;
             document.getElementById('data-preview-table-wrapper').innerHTML = previewHtml;
             document.getElementById('data-preview-container').classList.remove('hidden');
@@ -428,7 +413,7 @@ async function handleGenerateCode() {
         const lang = document.getElementById('programming-language-input').value.trim();
         let prompt = `Generate code for this description: "${promptText}". Provide ONLY the code, no explanations or markdown formatting.`;
         if (lang) prompt += ` The language should be ${lang}.`;
-        if (uploadedData) prompt += ` The code should process data from a variable named 'uploadedData'.`;
+        if (window.uploadedData) prompt += ` The code should process data from a variable named 'uploadedData'.`;
         const generatedCode = await callAIAssistant(prompt);
         document.getElementById('generated-code-output').textContent = generatedCode;
         if (container) container.classList.remove('hidden');
@@ -453,69 +438,14 @@ function handleExecuteCode() {
 }
 
 // --- SPECIAL FEATURE: IMAGE ---
-function handleImageUpload(event) {
-    const file = event.target.files[0];
-    const previewContainer = document.getElementById('uploaded-image-preview-container');
-    const previewImage = document.getElementById('uploaded-image-preview');
-    const fileNameDisplay = document.getElementById('uploaded-image-name');
-    const editImageBtn = document.getElementById('edit-image-btn');
-
-    if (!file) {
-        uploadedImageFile = null;
-        fileNameDisplay.textContent = 'No file chosen';
-        previewContainer.classList.add('hidden');
-        editImageBtn.classList.add('disabled:opacity-50', 'disabled:cursor-not-allowed');
-        editImageBtn.disabled = true;
-        return;
-    }
-
-    uploadedImageFile = file;
-    fileNameDisplay.textContent = file.name;
-    
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        previewImage.src = e.target.result;
-        previewContainer.classList.remove('hidden');
-        editImageBtn.disabled = false;
-        editImageBtn.classList.remove('disabled:opacity-50', 'disabled:cursor-not-allowed');
-    };
-    reader.readAsDataURL(file);
-}
-
-async function handleImageAction(actionId) {
-    hideMessages();
-    const promptText = document.getElementById('image-prompt-input').value.trim();
-    const editPromptText = document.getElementById('edit-prompt-input').value.trim();
-    const isImageGeneration = (actionId === 'generate-image-btn');
-
-    // Check for required inputs
-    if (isImageGeneration && !promptText) {
-        return showError('Please enter an image description to generate a new image.');
-    }
-    if (!isImageGeneration && (!uploadedImageFile || !editPromptText)) {
-        return showError('Please upload an image and provide an editing prompt.');
-    }
-
-    setLoadingState(true, 'AI is working on your image...');
+async function handleGenerateImage() {
+    const prompt = document.getElementById('image-prompt-input').value.trim();
+    if (!prompt) return showError('Please enter an image description.');
+    setLoadingState(true, 'AI is generating your image...');
     const container = document.getElementById('generated-image-container');
     if(container) container.classList.add('hidden');
-    
     try {
-        let imageUrl = '';
-        if (isImageGeneration) {
-            // New image generation
-            imageUrl = await callImageGenerationAPI(promptText);
-        } else {
-            // Image editing
-            const imageDataBase64 = await new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = () => resolve(reader.result.split(',')[1]); // Get the Base64 part
-                reader.onerror = error => reject(error);
-                reader.readAsDataURL(uploadedImageFile);
-            });
-            imageUrl = await callImageEditingAPI(imageDataBase64, editPromptText);
-        }
-
+        const imageUrl = await callImageGenerationAPI(prompt);
         const img = document.getElementById('generated-image-output');
         const link = document.getElementById('download-image-btn');
         if (img) img.src = imageUrl;
@@ -524,14 +454,7 @@ async function handleImageAction(actionId) {
             link.classList.remove('disabled-link');
         }
         if (container) container.classList.remove('hidden');
-
-        showSuccess(isImageGeneration ? 'New image generated successfully!' : 'Image edited successfully!');
-
-    } catch (error) {
-        showError(error.message || `An error occurred during image ${isImageGeneration ? 'generation' : 'editing'}.`);
-    } finally {
-        setLoadingState(false);
-    }
+    } catch (error) { showError(error.message); } finally { setLoadingState(false); }
 }
 
 // --- UI & UTILITY FUNCTIONS ---
@@ -750,16 +673,3 @@ function smoothThreeJsTransition() {
 
 
 function setupLenisSmoothScroll() { if (typeof window.Lenis !== 'undefined') lenis = new window.Lenis(); }
-function initCustomCursorEffect() {
-    const colors = ["#a855f7", "#c084fc", "#e9d5ff", "#ffffff"];
-    const createParticle = (x, y) => {
-        const p = document.createElement('div');
-        p.className = 'cursor-particle';
-        document.body.appendChild(p);
-        p.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-        p.style.left = `${x}px`;
-        p.style.top = `${y}px`;
-        setTimeout(() => p.remove(), 600);
-    };
-    document.body.addEventListener('mousemove', e => createParticle(e.clientX, e.clientY));
-}
