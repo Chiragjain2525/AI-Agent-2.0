@@ -304,28 +304,6 @@ main#main-content textarea,
     }
 }
 
-/* Site entry animation */
-body.site-entering #content-wrapper-3d {
-    opacity: 0;
-    transform: translateY(-100px); 
-}
-
-body.site-entered #content-wrapper-3d {
-    animation: slideInFromTop 1s ease-out forwards; 
-    animation-delay: 0.2s; 
-}
-
-@keyframes slideInFromTop {
-    0% {
-        opacity: 0;
-        transform: translateY(-100px);
-    }
-    100% {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
 
 /* --- Headings and Text inside Inner Panels --- */
 #readme-output-container h1, #readme-output-container h2, #readme-output-container h3,
@@ -435,20 +413,6 @@ pre code {
     background-color: #9333ea;
 }
 
-/* --- Cursor Particle Effect --- */
-.cursor-particle {
-    position: fixed; 
-    left: 0; 
-    top: 0;  
-    border-radius: 50%;
-    pointer-events: none; 
-    opacity: 0.7;
-    transform: translate(-50%, -50%); 
-    transition: opacity 0.6s ease-out, transform 0.6s ease-out;
-    z-index: 9999; 
-    mix-blend-mode: screen; 
-}
-
 /* --- Data Preview Table --- */
 .data-preview-table {
     width: 100%;
@@ -493,20 +457,4 @@ pre code {
 .footer-icon:hover {
     transform: scale(1.2);
     color: #a855f7;
-}
-
-/* Add this to your style.css */
-@keyframes headerPop {
-    0% {
-        opacity: 0;
-        transform: translateY(-20px) scale(0.95);
-    }
-    100% {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
-}
-
-.animate-header-pop {
-    animation: headerPop 0.6s ease-out forwards;
 }

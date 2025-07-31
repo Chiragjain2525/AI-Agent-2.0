@@ -118,7 +118,6 @@ async function loadHTML(url, selector) {
 function initializeApp() {
     setupThreeJSAnimation(); // This is now called early to show during loading
     setupLenisSmoothScroll();
-    // initCustomCursorEffect(); // Removed custom cursor effect
     document.getElementById('currentYear').textContent = new Date().getFullYear();
     setupGlobalEventListeners();
 }
@@ -275,21 +274,7 @@ async function handleImproveReadme() {
         showSuccess("README has been improved!");
     } catch (error) { showError(error.message); } finally { setLoadingState(false); }
 }
-async function handleSuggestCommits() {
-    setLoadingState(true, 'AI is suggesting commit messages...');
-    const container = document.getElementById('commit-suggestions-container');
-    if(container) container.classList.add('hidden');
-    try {
-        const prompt = `Based on this README.md, generate 3-5 Conventional Commit messages. Provide ONLY the messages, each on a new line. README:\n---\n${rawMarkdownContent}\n---`;
-        const suggestionsText = await callAIAssistant(prompt);
-        const suggestions = suggestionsText.split('\n').filter(s => s.trim());
-        if (container && suggestions.length) {
-            container.innerHTML = `<p class="text-sm font-semibold text-gray-300 mb-2">Click a suggestion to use it:</p>` + 
-                suggestions.map(s => `<div class="p-2 rounded-md bg-slate-700/50 text-gray-200 text-sm font-mono commit-suggestion">${s.replace(/^-/, '').trim()}</div>`).join('');
-            container.classList.remove('hidden');
-        } else { showError("AI couldn't generate suggestions."); }
-    } catch (error) { showError(error.message); } finally { setLoadingState(false); }
-}
+
 async function handlePushToGitHub() {
     const token = document.getElementById('github-token').value.trim();
     const message = document.getElementById('commit-message').value.trim();
@@ -688,16 +673,3 @@ function smoothThreeJsTransition() {
 
 
 function setupLenisSmoothScroll() { if (typeof window.Lenis !== 'undefined') lenis = new window.Lenis(); }
-function initCustomCursorEffect() {
-    const colors = ["#a855f7", "#c084fc", "#e9d5ff", "#ffffff"];
-    const createParticle = (x, y) => {
-        const p = document.createElement('div');
-        p.className = 'cursor-particle';
-        document.body.appendChild(p);
-        p.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-        p.style.left = `${x}px`;
-        p.style.top = `${y}px`;
-        setTimeout(() => p.remove(), 600);
-    };
-    document.body.addEventListener('mousemove', e => createParticle(e.clientX, e.clientY));
-}
