@@ -40,6 +40,7 @@ export async function callImageGenerationAPI(prompt) {
         body: JSON.stringify({ prompt: prompt, type: 'image' }) // Specify type
     });
 
+    console.log('Image Generation API Response:', response);
     if (!response.ok) {
         const errorData = await response.json();
         console.error("Image Generation API Error:", errorData);
@@ -47,6 +48,7 @@ export async function callImageGenerationAPI(prompt) {
     }
 
     const result = await response.json();
+    console.log('Image Generation API Result:', result);
     if (result.predictions?.[0]?.bytesBase64Encoded) {
         return `data:image/jpeg;base64,${result.predictions[0].bytesBase64Encoded}`;
     } else {
@@ -66,12 +68,16 @@ export async function callImageEditingAPI(prompt, base64Image) {
         throw new Error("Prompt and image data are required for image editing.");
     }
 
+    const payload = { prompt: prompt, type: 'image_edit', image: base64Image };
+    console.log('Sending payload to image editing API:', payload);
+
     const response = await fetch('/.netlify/functions/call-ai', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: prompt, type: 'image_edit', image: base64Image }) // Specify type
+        body: JSON.stringify(payload)
     });
 
+    console.log('Image Editing API Response:', response);
     if (!response.ok) {
         const errorData = await response.json();
         console.error("Image Editing API Error:", errorData);
@@ -79,6 +85,7 @@ export async function callImageEditingAPI(prompt, base64Image) {
     }
 
     const result = await response.json();
+    console.log('Image Editing API Result:', result);
     if (result.candidates?.[0]?.content?.parts?.find(p => p.inlineData)?.inlineData?.data) {
         const base64Data = result.candidates[0].content.parts.find(p => p.inlineData).inlineData.data;
         return `data:image/png;base64,${base64Data}`;

@@ -460,6 +460,8 @@ function handleImageUpload(event) {
         reader.onload = (e) => {
             const base64String = e.target.result;
             imagePreview.src = base64String;
+            // Log the captured base64 data to the console
+            console.log("Uploaded Image Base64 Data:", base64String.substring(0, 100) + '...'); // Log a snippet
             // Store the base64 data without the prefix for the API call
             uploadedImageData = base64String.split(',')[1];
         };
@@ -515,6 +517,11 @@ async function handleEditImage() {
     setLoadingState(true, 'AI is editing your image...');
     if(container) container.classList.add('hidden');
     
+    // Log the data being sent for debugging
+    console.log("Sending to API for editing:");
+    console.log("Prompt:", prompt);
+    console.log("Image Data (Base64):", uploadedImageData.substring(0, 100) + '...');
+
     try {
         loadingMessage.textContent = 'AI is editing your image...';
         const imageUrl = await callImageEditingAPI(prompt, uploadedImageData);
@@ -601,7 +608,7 @@ function setLoadingState(isLoading, message = '') {
     const buttons = document.querySelectorAll('button');
     const loadingSpinner = document.getElementById('image-loading-spinner');
     buttons.forEach(btn => { 
-        if (btn.id !== 'image-upload-btn') { // Exclude the image upload button from being disabled
+        if (btn.id !== 'image-upload-input' && btn.id !== 'image-upload-btn') { // Exclude the image upload button from being disabled
             btn.disabled = isLoading; 
             btn.classList.toggle('opacity-50', isLoading); 
             btn.classList.toggle('cursor-not-allowed', isLoading); 
