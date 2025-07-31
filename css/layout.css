@@ -1,0 +1,94 @@
+/* --- Background Canvas --- */
+#bg-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+}
+
+/* --- New 3D Content Wrapper --- */
+#content-wrapper-3d {
+    /* This will be animated by JS, but base styles here */
+    transform: translateY(0px); 
+    transition: transform 0.5s ease-in-out; 
+    z-index: 1; 
+}
+
+/* --- Main "Glass" Content Containers --- */
+main#main-content, #special-feature-container {
+    padding: 1.5rem; /* Default padding for smaller screens */
+}
+
+/* Ensure inputs/textareas inside the boxes don't inherit or reset the parent's transform */
+main#main-content input, 
+main#main-content textarea,
+#special-feature-container input,
+#special-feature-container textarea {
+    transform: none; 
+    position: relative; 
+    z-index: 1; 
+}
+
+@media (min-width: 768px) {
+    main#main-content, #special-feature-container {
+        padding: 2rem; /* Larger padding for desktop */
+    }
+}
+
+/* --- Inner Panels (for results, file lists, etc.) --- */
+#readme-output-container, 
+#code-explanation-container, 
+#refactored-code-container > div, 
+#generated-code-container > div,
+#file-list,
+#improve-section,
+#push-section,
+#data-preview-container {
+    padding: 1.5rem; /* Consistent padding for inner panels */
+}
+
+/* --- Header --- */
+#main-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+    padding: 0.75rem 1rem;
+}
+
+/* --- Mobile Selected Module Title --- */
+#mobile-selected-module-title {
+    display: block; /* Ensures it takes full width */
+}
+
+/* --- Back to Top Button --- */
+#backToTopBtn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 50px;
+    height: 50px;
+    z-index: 1001;
+    opacity: 0; /* Hidden by default, shown by JS */
+    visibility: hidden;
+    transform: translateY(20px);
+}
+
+/* --- Cursor Particle Effect --- */
+.cursor-particle {
+    position: fixed; 
+    left: 0; 
+    top: 0;  
+    pointer-events: none; /* Ensures it doesn't block clicks */
+    z-index: 9999; 
+}
+
+/* --- Data Preview Table --- */
+.data-preview-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}

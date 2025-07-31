@@ -1,0 +1,161 @@
+/* --- Main "Glass" Content Containers (Styling) --- */
+/* These styles define the visual appearance of the main content areas */
+main#main-content, #special-feature-container {
+    background-color: rgba(15, 23, 42, 0.65); 
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(51, 65, 85, 0.7);
+    border-radius: 1.5rem; 
+    box-shadow: 
+        0 10px 20px rgba(0, 0, 0, 0.6), 
+        0 0 40px rgba(167, 139, 250, 0.2), 
+        inset 0 0 20px rgba(192, 132, 252, 0.08), 
+        0 0 0 2px rgba(126, 34, 206, 0.3); 
+}
+
+/* --- Inner Panels (Styling) --- */
+/* These styles define the visual appearance of internal content blocks */
+#readme-output-container, 
+#code-explanation-container, 
+#refactored-code-container > div, 
+#generated-code-container > div,
+#file-list,
+#improve-section,
+#push-section,
+#data-preview-container {
+    background-color: rgba(15, 23, 42, 0.8); 
+    border: 1px solid #334155;
+    border-radius: 0.5rem;
+}
+
+/* --- Text & Button Effects --- */
+.text-glow {
+    text-shadow: 0 0 8px rgba(192, 132, 252, 0.6), 0 0 20px rgba(167, 139, 250, 0.4);
+}
+
+.btn-animated-glow {
+    background: linear-gradient(90deg, #5b21b6, #9333ea, #5b21b6);
+    background-size: 200% 200%;
+    border: 1px solid #a78bfa;
+    box-shadow: 0 0 8px rgba(167, 139, 250, 0.4), 0 0 15px rgba(167, 139, 250, 0.2);
+    transition: all 0.3s ease;
+}
+
+.btn-animated-glow:hover {
+    animation-duration: 3s; /* Speeds up animation on hover */
+    box-shadow: 0 0 12px rgba(167, 139, 250, 0.6), 0 0 25px rgba(167, 139, 250, 0.4);
+}
+
+/* --- Module Tabs --- */
+.tab-button {
+    transition: all 0.3s ease;
+    position: relative; 
+    background-color: transparent;
+    border-radius: 0.5rem; 
+    padding: 0.6rem 0.9rem; 
+    margin: 0 0.3rem; 
+    white-space: nowrap; 
+    color: #cbd5e1; 
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(51, 65, 85, 0.7); 
+}
+
+.tab-button.active::after {
+    content: none; /* Removes any pseudo-element content for active state */
+}
+
+.tab-button:hover {
+    background-color: rgba(167, 139, 250, 0.15); 
+    color: #e2e8f0; 
+    transform: translateY(-3px); 
+    box-shadow: 0 6px 12px rgba(167, 139, 250, 0.4), 0 0 0 1px rgba(167, 139, 250, 0.8); 
+}
+
+.tab-button.active {
+    color: #c084fc; 
+    background-color: rgba(167, 139, 250, 0.25); 
+    box-shadow: 
+        0 8px 16px rgba(167, 139, 250, 0.6), 
+        0 0 0 2px #c084fc, 
+        inset 0 0 15px rgba(192, 132, 252, 0.3); 
+    transform: translateY(0); /* Resets transform for active state */
+}
+
+/* --- Mobile Selected Module Title (Styling) --- */
+#mobile-selected-module-title {
+    color: #e2e8f0; 
+    font-size: 1.25rem; 
+    font-weight: 700; 
+}
+
+/* --- File Explorer --- */
+#file-list .file-item {
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+#file-list .file-item:hover {
+    background-color: rgba(167, 139, 250, 0.1);
+}
+
+#file-list .file-item i {
+    color: #93c5fd; /* Icon color */
+}
+
+#file-list .folder-item i {
+    color: #fcd34d; /* Folder icon color */
+}
+
+/* --- Commit Suggestions --- */
+.commit-suggestion {
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.commit-suggestion:hover {
+    background-color: rgba(167, 139, 250, 0.1);
+}
+
+/* --- Back to Top Button (Styling) --- */
+#backToTopBtn {
+    background-color: #7e22ce;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    font-size: 24px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(126, 34, 206, 0.4);
+}
+
+#backToTopBtn:hover {
+    background-color: #9333ea;
+}
+
+/* --- Cursor Particle Effect (Styling) --- */
+.cursor-particle {
+    border-radius: 50%;
+    opacity: 0.7;
+    transform: translate(-50%, -50%); /* Centers the particle */
+    transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+    mix-blend-mode: screen; /* For a glowing, blending effect */
+}
+
+/* --- Data Preview Table --- */
+.data-preview-table th, .data-preview-table td {
+    border: 1px solid #475569;
+    padding: 0.75rem;
+    text-align: left;
+}
+
+.data-preview-table th {
+    background-color: #1e293b;
+    color: #e2e8f0;
+    font-weight: 600;
+}
+
+.data-preview-table tr:nth-child(even) {
+    background-color: rgba(30, 41, 59, 0.5);
+}
+
+.data-preview-table tr:hover {
+    background-color: rgba(51, 65, 85, 0.7);
+}

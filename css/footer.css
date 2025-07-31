@@ -1,0 +1,20 @@
+/* --- Footer Styles --- */
+footer {
+    /* Base styles from index.html footer */
+    text-align: center;
+    padding: 8px 0; /* py-8 md:py-12 */
+    margin-top: 8px; /* mt-8 md:mt-12 */
+    background-color: transparent;
+    position: relative;
+    z-index: 10; /* Ensure footer is above background canvas */
+}
+
+.footer-icon {
+    color: #9ca3af;
+    transition: transform 0.3s ease, color 0.3s ease;
+}
+
+.footer-icon:hover {
+    transform: scale(1.2);
+    color: #a855f7;
+}

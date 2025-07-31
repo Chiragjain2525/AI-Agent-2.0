@@ -1,0 +1,65 @@
+/* --- General Body & Typography --- */
+html {
+    background-color: #000000; /* Sets the root background to a dark color */
+}
+
+body {
+    font-family: 'Roboto', sans-serif;
+    padding-top: 80px; /* Adjust for fixed header */
+    color: #e2e8f0; /* text-gray-200 */
+    background-color: transparent; /* Ensures body is transparent to see the html background */
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Poppins', sans-serif;
+}
+
+/* --- Headings and Text inside Inner Panels --- */
+/* These styles apply to markdown-rendered content within output containers */
+#readme-output-container h1, #readme-output-container h2, #readme-output-container h3,
+#code-explanation-container h1, #code-explanation-container h2, #code-explanation-container h3,
+#refactored-code-container h1, #refactored-code-container h2, #refactored-code-container h3,
+#generated-code-container h1, #generated-code-container h2, #generated-code-container h3 {
+    font-weight: 700;
+    color: #e2e8f0;
+    border-bottom: 1px solid #475569;
+    padding-bottom: 0.5rem;
+    margin-top: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+#readme-output-container h1, #code-explanation-container h1, #refactored-code-container h1, #generated-code-container h1 { font-size: 2em; }
+#readme-output-container h2, #code-explanation-container h2, #refactored-code-container h2, #generated-code-container h2 { font-size: 1.5em; }
+#readme-output-container h3, #code-explanation-container h3, #refactored-code-container h3, #generated-code-container h3 { font-size: 1.25em; }
+#readme-output-container p, #code-explanation-container p, #refactored-code-container p, #generated-code-container p { margin-bottom: 1rem; line-height: 1.6; }
+#readme-output-container a, #code-explanation-container a, #refactored-code-container a, #generated-code-container a { color: #818cf8; text-decoration: underline; }
+#readme-output-container ul, #readme-output-container ol, #code-explanation-container ul, #code-explanation-container ol, #refactored-code-container ul, #refactored-code-container ol, #generated-code-container ul, #generated-code-container ol { margin-left: 1.5rem; margin-bottom: 1rem; list-style-position: outside; }
+#readme-output-container li, #code-explanation-container li, #refactored-code-container li, #generated-code-container li { margin-bottom: 0.5rem; }
+
+/* --- Code & Preformatted Text Styling --- */
+/* Inline code snippets */
+code {
+    background-color: rgba(51, 65, 85, 0.7);
+    color: #f1f5f9;
+    padding: 0.2em 0.4em;
+    margin: 0;
+    font-size: 85%;
+    border-radius: 6px;
+    font-family: 'Courier New', Courier, monospace;
+}
+
+/* Code blocks (pre tags) */
+pre {
+    background-color: rgba(10, 15, 29, 0.9); 
+    padding: 1rem;
+    border-radius: 0.5rem;
+    overflow-x: auto;
+    margin-bottom: 1rem;
+}
+
+/* Resetting background for code inside a pre block */
+pre code {
+    background-color: transparent;
+    padding: 0;
+    font-size: 100%;
+}
