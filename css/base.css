@@ -5,7 +5,8 @@ html {
 
 body {
     font-family: 'Roboto', sans-serif;
-    padding-top: 80px; /* Adjust for fixed header */
+    /* Adjusted padding-top to account for fixed header and its top offset */
+    padding-top: 6rem; /* Increased from 80px to 6rem (approx 96px) to give more space */
     color: #e2e8f0; /* text-gray-200 */
     background-color: transparent; /* Ensures body is transparent to see the html background */
 }

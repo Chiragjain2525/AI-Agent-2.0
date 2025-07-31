@@ -41,9 +41,6 @@ export async function handleAnalyzeClick() {
             // Show the README output container
             document.getElementById('result-container')?.classList.remove('hidden');
         } 
-        // Note: The Module 2 specific logic for handleAnalyzeClick is now in module2-handlers.js
-        // This function is primarily for the global analyze button, which triggers different
-        // actions based on the active module.
     } catch (error) {
         // Display any errors that occur during the process
         window.showError(error.message || 'An unknown error occurred during analysis or README generation.');

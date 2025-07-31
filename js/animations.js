@@ -162,21 +162,3 @@ export function setupLenisSmoothScroll() {
         console.warn("Lenis library not found. Smooth scrolling will not be enabled.");
     }
 }
-
-/**
- * Initializes a custom cursor particle effect.
- * (Currently commented out in main.js, but included here for completeness if desired)
- */
-// export function initCustomCursorEffect() {
-//     const colors = ["#a855f7", "#c084fc", "#e9d5ff", "#ffffff"];
-//     const createParticle = (x, y) => {
-//         const p = document.createElement('div');
-//         p.className = 'cursor-particle';
-//         document.body.appendChild(p);
-//         p.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-//         p.style.left = `${x}px`;
-//         p.style.top = `${y}px`;
-//         setTimeout(() => p.remove(), 600);
-//     };
-//     document.body.addEventListener('mousemove', e => createParticle(e.clientX, e.clientY));
-// }

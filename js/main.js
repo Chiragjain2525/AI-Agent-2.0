@@ -1,30 +1,26 @@
 import { fetchRepoData, getFileContent, callAIAssistant, callImageGenerationAPI } from './api.js';
 import { setupThreeJSAnimation, smoothThreeJsTransition, setupLenisSmoothScroll } from './animations.js';
 import { switchModule, updateMobileModuleTitle } from './module-manager.js';
-import { handleAnalyzeClick } from './module1-handlers.js'; // Will be moved to a global handler later
-import { handleFileClick } from './module2-handlers.js'; // Will be moved to a global handler later
-import { handleRefactorCode } from './module3-handlers.js'; // Will be moved to a global handler later
-import { handleDataUpload, handleGenerateCode, handleExecuteCode } from './module4-handlers.js'; // Will be moved to a global handler later
-import { handleGenerateImage } from './special-feature-handlers.js'; // Will be moved to a global handler later
+import { handleAnalyzeClick } from './module1-handlers.js';
+import { handleFileClick } from './module2-handlers.js';
+import { handleRefactorCode } from './module3-handlers.js';
+import { handleDataUpload, handleGenerateCode, handleExecuteCode } from './module4-handlers.js';
+import { handleGenerateImage } from './special-feature-handlers.js';
 import { setLoadingState, showError, showSuccess, hideMessages, parseGithubUrl, isValidRepoUrl, copyToClipboard } from './utils.js';
+import { initializeFooter } from './footer.js';
+
 
 // --- GLOBAL STATE ---
 // These global states are still managed here as they are central to the application's overall behavior.
-let currentModule = 'module1';
-let currentRepoPath = null;
-let rawMarkdownContent = '';
-let languageChart = null; // Chart instance for module 2
-let lenis; // For smooth scrolling
+// They are exposed to the window object for easier access by other modules without explicit imports everywhere.
+window.currentModule = 'module1';
+window.currentRepoPath = null;
+window.rawMarkdownContent = '';
+window.languageChart = null; // Chart instance for module 2
+window.lenis = null; // For smooth scrolling, initialized by setupLenisSmoothScroll
 
-// Expose global state and utility functions to the window object for easier access
-// by other modules without explicit imports everywhere.
-window.currentModule = currentModule;
-window.currentRepoPath = currentRepoPath;
-window.rawMarkdownContent = rawMarkdownContent;
-window.languageChart = languageChart;
-window.lenis = lenis; // Will be initialized by setupLenisSmoothScroll
 
-// Expose utility functions
+// Expose utility functions to the window object
 window.setLoadingState = setLoadingState;
 window.showError = showError;
 window.showSuccess = showSuccess;
@@ -33,7 +29,7 @@ window.parseGithubUrl = parseGithubUrl;
 window.isValidRepoUrl = isValidRepoUrl;
 window.copyToClipboard = copyToClipboard;
 
-// Expose API functions
+// Expose API functions to the window object
 window.fetchRepoData = fetchRepoData;
 window.getFileContent = getFileContent;
 window.callAIAssistant = callAIAssistant;
@@ -162,8 +158,7 @@ async function loadHTML(url, selector) {
 function initializeApp() {
     setupThreeJSAnimation(); // This is now called early to show during loading
     setupLenisSmoothScroll();
-    // initCustomCursorEffect(); // Removed custom cursor effect, if it were active, it would be in animations.js
-    document.getElementById('currentYear').textContent = new Date().getFullYear();
+    initializeFooter(); // Call the new footer initialization function
     setupGlobalEventListeners();
 }
 

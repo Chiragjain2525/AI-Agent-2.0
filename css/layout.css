@@ -49,16 +49,6 @@ main#main-content textarea,
     padding: 1.5rem; /* Consistent padding for inner panels */
 }
 
-/* --- Header --- */
-#main-header {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    z-index: 1000;
-    padding: 0.75rem 1rem;
-}
-
 /* --- Mobile Selected Module Title --- */
 #mobile-selected-module-title {
     display: block; /* Ensures it takes full width */

@@ -28,8 +28,7 @@
 
 /* --- Header Entry Animation --- */
 #main-header {
-    transform: translateY(-150%); /* Start off-screen */
-    opacity: 0; /* Start invisible */
+    /* This animation will now ONLY handle vertical positioning and opacity */
     animation: coolHeaderAppear 0.5s 0.1s cubic-bezier(0.23, 1, 0.32, 1) forwards;
 }
 

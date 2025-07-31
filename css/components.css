@@ -80,6 +80,7 @@ main#main-content, #special-feature-container {
     transform: translateY(0); /* Resets transform for active state */
 }
 
+
 /* --- Mobile Selected Module Title (Styling) --- */
 #mobile-selected-module-title {
     color: #e2e8f0; 
