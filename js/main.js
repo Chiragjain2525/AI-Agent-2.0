@@ -40,10 +40,13 @@ async function loadApp() {
             // Start the smooth transition of Three.js properties
             smoothThreeJsTransition(); 
 
-            loadingOverlay.classList.add('opacity-0'); // Start fade out
+            // Add 'opacity-0' class to start the fade-out transition
+            loadingOverlay.classList.add('opacity-0'); 
+            
+            // After the transition, hide the element completely
             setTimeout(() => {
-                loadingOverlay.classList.add('hidden'); // Hide after fade out
-            }, 700); // Match CSS transition duration
+                loadingOverlay.classList.add('hidden'); 
+            }, 1000); // This duration should match the CSS transition for opacity
         }
 
     } catch (error) {

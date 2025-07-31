@@ -26,33 +26,29 @@ h1, h2, h3, h4, h5, h6 {
 
 /* --- New 3D Content Wrapper --- */
 #content-wrapper-3d {
-    /* Removed rotateX and rotateY transforms here, only translateY for float */
     transform: translateY(0px); 
-    transition: transform 0.5s ease-in-out; /* Smooth transition for hover/float */
-    /* Apply floating animation */
-    animation: floatAnimation 4s ease-in-out infinite; /* Adjusted duration for smoother, more noticeable float */
-    z-index: 1; /* Ensure it's above other elements if needed */
+    transition: transform 0.5s ease-in-out; 
+    animation: floatAnimation 4s ease-in-out infinite; 
+    z-index: 1; 
 }
 
 #content-wrapper-3d:hover {
-    /* Maintain no tilt, only lift on hover */
     transform: translateY(-5px); 
 }
 
 
 /* --- Main "Glass" Content Containers --- */
 main#main-content, #special-feature-container {
-    background-color: rgba(15, 23, 42, 0.65); /* The main semi-transparent panel */
+    background-color: rgba(15, 23, 42, 0.65); 
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     border: 1px solid rgba(51, 65, 85, 0.7);
-    border-radius: 1.5rem; /* More rounded corners */
-    /* Advanced 3D box-shadow with multiple layers and subtle glow */
+    border-radius: 1.5rem; 
     box-shadow: 
-        0 10px 20px rgba(0, 0, 0, 0.6), /* Stronger, larger main shadow for pronounced lift */
-        0 0 40px rgba(167, 139, 250, 0.2), /* Wider, more diffused purple glow */
-        inset 0 0 20px rgba(192, 132, 252, 0.08), /* More noticeable inner light for depth */
-        0 0 0 2px rgba(126, 34, 206, 0.3); /* Thin, subtle outer border glow */
+        0 10px 20px rgba(0, 0, 0, 0.6), 
+        0 0 40px rgba(167, 139, 250, 0.2), 
+        inset 0 0 20px rgba(192, 132, 252, 0.08), 
+        0 0 0 2px rgba(126, 34, 206, 0.3); 
     padding: 1.5rem;
 }
 
@@ -61,10 +57,9 @@ main#main-content input,
 main#main-content textarea,
 #special-feature-container input,
 #special-feature-container textarea {
-    /* Reset any potential inherited transforms or z-index issues */
     transform: none; 
-    position: relative; /* Ensure they render correctly within the 3D context */
-    z-index: 1; /* Bring them above any potential shadow rendering issues */
+    position: relative; 
+    z-index: 1; 
 }
 
 
@@ -83,7 +78,7 @@ main#main-content textarea,
 #improve-section,
 #push-section,
 #data-preview-container {
-    background-color: rgba(15, 23, 42, 0.8); /* Darker, more solid panel */
+    background-color: rgba(15, 23, 42, 0.8); 
     border: 1px solid #334155;
     border-radius: 0.5rem;
     padding: 1.5rem;
@@ -114,11 +109,6 @@ main#main-content textarea,
     100% { background-position: 0% 50%; }
 }
 
-/* --- Loading Spinner --- */
-.lds-dual-ring {
-    display: none; /* Hide the old spinner */
-}
-
 /* --- Header --- */
 #main-header {
     position: fixed;
@@ -146,49 +136,44 @@ main#main-content textarea,
 /* --- Module Tabs --- */
 .tab-button {
     transition: all 0.3s ease;
-    position: relative; /* Needed for pseudo-element */
+    position: relative; 
     background-color: transparent;
-    border-radius: 0.5rem; /* Increased rounding for 3D feel */
-    padding: 0.6rem 0.9rem; /* Slightly more padding */
-    margin: 0 0.3rem; /* Slightly more horizontal margin */
-    white-space: nowrap; /* Ensure text stays on one line */
-    color: #cbd5e1; /* Default text color (slate-300) */
-    /* Base 3D shadow */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(51, 65, 85, 0.7); /* Inner border-like shadow */
+    border-radius: 0.5rem; 
+    padding: 0.6rem 0.9rem; 
+    margin: 0 0.3rem; 
+    white-space: nowrap; 
+    color: #cbd5e1; 
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(51, 65, 85, 0.7); 
 }
 
-/* Completely remove the ::after pseudo-element for the underline */
 .tab-button.active::after {
     content: none; 
 }
 
-
-/* Hover effects */
 .tab-button:hover {
-    background-color: rgba(167, 139, 250, 0.15); /* Subtle purple background on hover */
-    color: #e2e8f0; /* Slightly brighter text on hover */
-    transform: translateY(-3px); /* More pronounced lift effect */
-    box-shadow: 0 6px 12px rgba(167, 139, 250, 0.4), 0 0 0 1px rgba(167, 139, 250, 0.8); /* Stronger shadow and glow */
+    background-color: rgba(167, 139, 250, 0.15); 
+    color: #e2e8f0; 
+    transform: translateY(-3px); 
+    box-shadow: 0 6px 12px rgba(167, 139, 250, 0.4), 0 0 0 1px rgba(167, 139, 250, 0.8); 
 }
 
-/* Active state */
 .tab-button.active {
-    color: #c084fc; /* Active text color */
-    background-color: rgba(167, 139, 250, 0.25); /* Stronger background for active */
+    color: #c084fc; 
+    background-color: rgba(167, 139, 250, 0.25); 
     box-shadow: 
-        0 8px 16px rgba(167, 139, 250, 0.6), /* Main glow */
-        0 0 0 2px #c084fc, /* Active border glow */
-        inset 0 0 15px rgba(192, 132, 252, 0.3); /* Inner light effect */
-    transform: translateY(0); /* Ensure it's not lifted if it was hovered */
+        0 8px 16px rgba(167, 139, 250, 0.6), 
+        0 0 0 2px #c084fc, 
+        inset 0 0 15px rgba(192, 132, 252, 0.3); 
+    transform: translateY(0); 
 }
 
 
 /* --- Mobile Selected Module Title --- */
 #mobile-selected-module-title {
-    color: #e2e8f0; /* Default text color */
-    font-size: 1.25rem; /* text-xl */
-    font-weight: 700; /* font-bold */
-    display: block; /* Ensure it's always block on mobile */
+    color: #e2e8f0; 
+    font-size: 1.25rem; 
+    font-weight: 700; 
+    display: block; 
 }
 
 
@@ -216,19 +201,21 @@ main#main-content textarea,
 /* --- Floating Animation Keyframes --- */
 @keyframes floatAnimation {
     0% {
-        transform: translateY(0px); /* Removed rotation, only vertical float */
+        transform: translateY(0px); 
     }
     50% {
-        transform: translateY(-35px); /* Increased float height significantly */
+        transform: translateY(-35px); 
     }
     100% {
-        transform: translateY(0px); /* Removed rotation, only vertical float */
+        transform: translateY(0px); 
     }
 }
 
-/* --- Cyberpunk Loading Screen Styles --- */
+/* --- Loading Screen Styles --- */
 #loading-overlay {
-    background-color: #0a0a0a; /* Dark background */
+    background-color: rgba(0, 0, 0, 0.7); 
+    backdrop-filter: blur(15px); 
+    -webkit-backdrop-filter: blur(15px); 
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -240,51 +227,103 @@ main#main-content textarea,
     height: 100%;
     z-index: 9999;
     opacity: 1;
-    transition: opacity 0.7s ease-out; /* Smooth fade out */
-    /* Added subtle scanline effect */
+    transition: opacity 0.7s ease-out; 
     background-image: 
-        linear-gradient(rgba(0, 255, 255, 0.05) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0, 255, 255, 0.05) 1px, transparent 1px);
-    background-size: 3px 3px;
-    /* Added CRT scanline animation */
-    animation: scanlines 8s linear infinite;
-    /* Added a subtle noise overlay */
-    &::before { /* Moved noise to a pseudo-element for better control */
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: repeating-linear-gradient(
-            0deg,
-            rgba(0, 0, 0, 0.1) 0px,
-            rgba(0, 0, 0, 0.1) 1px,
-            transparent 1px,
-            transparent 2px
-        );
-        opacity: 0.1;
-        animation: noise 0.5s steps(2) infinite;
-        pointer-events: none;
-    }
+        linear-gradient(to right, rgba(126, 34, 206, 0.05) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(126, 34, 206, 0.05) 1px, transparent 1px);
+    background-size: 20px 20px;
+    animation: scanline-fade 3s linear infinite; 
+}
+
+@keyframes scanline-fade {
+    0% { background-position: 0% 0%; }
+    100% { background-position: 100% 100%; }
+}
+
+#loading-overlay.opacity-0 {
+    opacity: 0;
 }
 
 #loading-overlay.hidden {
+    display: none; 
+}
+
+/* Loading Text */
+.loading-text {
+    font-family: 'Poppins', sans-serif;
+    font-size: 2rem;
+    font-weight: 600;
+    color: #e2e8f0;
+    margin-bottom: 1rem;
+    text-shadow: 0 0 10px rgba(167, 139, 250, 0.5); 
+    animation: text-glow-pulse 1.5s infinite alternate; 
+}
+
+@keyframes text-glow-pulse {
+    0% { text-shadow: 0 0 5px rgba(167, 139, 250, 0.3), 0 0 10px rgba(167, 139, 250, 0.2); }
+    100% { text-shadow: 0 0 15px rgba(167, 139, 250, 0.8), 0 0 25px rgba(167, 139, 250, 0.6); }
+}
+
+
+/* Loading Dots Animation */
+.loading-dots {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.loading-dot {
+    width: 12px;
+    height: 12px;
+    background-color: #a855f7; 
+    border-radius: 50%;
+    margin: 0 6px;
+    animation: pulse-dot 1.2s infinite ease-in-out;
+}
+
+.loading-dot:nth-child(1) {
+    animation-delay: 0s;
+}
+
+.loading-dot:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.loading-dot:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+@keyframes pulse-dot {
+    0%, 100% {
+        transform: scale(0.8);
+        opacity: 0.5;
+    }
+    50% {
+        transform: scale(1.2);
+        opacity: 1;
+    }
+}
+
+/* Site entry animation */
+body.site-entering #content-wrapper-3d {
     opacity: 0;
-    pointer-events: none; /* Allows clicks through once hidden */
+    transform: translateY(-100px); 
 }
 
-/* Removed .cyber-loader and .cyber-text styles as they are no longer needed */
-/* Removed text-specific glitch and neon glow keyframes as they are no longer needed */
-
-@keyframes scanlines {
-    0% { background-position: 0% 0%; }
-    100% { background-position: 0% 100%; }
+body.site-entered #content-wrapper-3d {
+    animation: slideInFromTop 1s ease-out forwards; 
+    animation-delay: 0.2s; 
 }
 
-@keyframes noise {
-    0% { background-position: 0 0; }
-    100% { background-position: 100% 100%; }
+@keyframes slideInFromTop {
+    0% {
+        opacity: 0;
+        transform: translateY(-100px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 
@@ -323,7 +362,7 @@ code {
 
 /* Code blocks (pre tags) */
 pre {
-    background-color: rgba(10, 15, 29, 0.9); /* Even darker for high contrast */
+    background-color: rgba(10, 15, 29, 0.9); 
     padding: 1rem;
     border-radius: 0.5rem;
     overflow-x: auto;
@@ -348,11 +387,11 @@ pre code {
 }
 
 #file-list .file-item i {
-    color: #93c5fd; /* light blue */
+    color: #93c5fd; 
 }
 
 #file-list .folder-item i {
-    color: #fcd34d; /* amber */
+    color: #fcd34d; 
 }
 
 /* --- Commit Suggestions --- */

@@ -20,9 +20,14 @@
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body class="text-gray-200">
-    <!-- Loading Overlay - Now just a background, Three.js will handle animation -->
-    <div id="loading-overlay" class="fixed inset-0 bg-black flex flex-col items-center justify-center z-[9999] transition-opacity duration-700 opacity-100">
-        <!-- Three.js background will be the loading animation -->
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="fixed inset-0 bg-black flex flex-col items-center justify-center z-[9999] opacity-100">
+        <div class="loading-text">Loading</div>
+        <div class="loading-dots">
+            <div class="loading-dot"></div>
+            <div class="loading-dot"></div>
+            <div class="loading-dot"></div>
+        </div>
     </div>
 
     <canvas id="bg-canvas"></canvas>
