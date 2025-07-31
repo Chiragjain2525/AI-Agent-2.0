@@ -45,7 +45,10 @@ exports.handler = async (event) => {
                             data: image
                         }
                     }]
-                }]
+                }],
+                generationConfig: {
+                    responseModalities: ['TEXT', 'IMAGE']
+                }
             };
         } else {
             return { statusCode: 400, body: 'Invalid request type specified.' };
