@@ -1,10 +1,22 @@
 <div id="image-generator-section">
     <h2 class="text-2xl font-bold text-gray-50 mb-4">Special Feature: AI Image Generator</h2>
-    <p class="text-sm text-gray-400 mb-4">Enter a detailed description of the image you want to generate.</p>
+    <p class="text-sm text-gray-400 mb-4">Enter a detailed description of the image you want to generate, or upload an image to edit.</p>
 
     <label for="image-prompt-input" class="block text-sm font-medium text-purple-200 mb-2">Image Description (Prompt):</label>
     <textarea id="image-prompt-input" class="w-full h-32 px-4 py-2 text-gray-50 bg-slate-800/50 border border-slate-600 rounded-lg focus:ring-2 focus:ring-indigo-500 mb-4" placeholder="e.g., 'A futuristic city at sunset with flying cars, highly detailed, cyberpunk style'"></textarea>
 
+    <!-- New: Image Upload Section -->
+    <label for="image-upload-input" class="block text-sm font-medium text-purple-200 mb-2">
+        Or, upload an image to edit (optional)
+    </label>
+    <div class="relative w-full h-12 bg-slate-800/50 border border-slate-600 rounded-lg flex items-center justify-center cursor-pointer overflow-hidden mb-4">
+        <input type="file" id="image-upload-input" class="absolute inset-0 opacity-0 cursor-pointer z-10" accept="image/*">
+        <div class="flex items-center text-gray-400">
+            <i class="fas fa-upload mr-2"></i>
+            <span id="file-name-display">Choose an image...</span>
+        </div>
+    </div>
+    
     <button id="generate-image-btn" class="w-full text-white font-semibold px-6 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 focus:ring-offset-slate-900 btn-animated-glow mb-4">
         Generate Image 🖼️
     </button>
@@ -22,6 +34,6 @@
                 <i class="fas fa-download ml-2"></i>
             </a>
         </div>
-        <img id="generated-image-output" src="" alt="Generated Image" class="max-w-full h-auto rounded-lg shadow-lg border border-slate-700 mx-auto block">
+        <img id="generated-image-output" src="https://placehold.co/800x600/1e293b/e2e8f0?text=AI+Generated+Image" alt="Generated Image" class="max-w-full h-auto rounded-lg shadow-lg border border-slate-700 mx-auto block">
     </div>
 </div>

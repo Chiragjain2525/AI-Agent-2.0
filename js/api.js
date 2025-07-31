@@ -27,13 +27,20 @@ export async function callAIAssistant(prompt) {
 /**
  * Calls our secure Netlify function to generate an image.
  * @param {string} prompt - The prompt for image generation.
+ * @param {string|null} [imageData=null] - Optional base64-encoded image data for image editing.
  * @returns {Promise<string>} - The base64-encoded image data URL.
  */
-export async function callImageGenerationAPI(prompt) {
+export async function callImageGenerationAPI(prompt, imageData = null) {
+    const payload = { 
+        prompt: prompt, 
+        type: 'image',
+        imageData: imageData // Send image data if it exists
+    };
+
     const response = await fetch('/.netlify/functions/call-ai', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: prompt, type: 'image' }) // Specify type
+        body: JSON.stringify(payload)
     });
 
     if (!response.ok) {

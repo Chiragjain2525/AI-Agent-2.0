@@ -6,6 +6,7 @@ let currentRepoPath = null;
 let rawMarkdownContent = '';
 let languageChart = null;
 let lenis; // For smooth scrolling
+let uploadedImageFile = null; // To store the uploaded image file object
 
 // --- INITIALIZATION ---
 console.log("main.js script started.");
@@ -188,6 +189,7 @@ function setupGlobalEventListeners() {
 
     // Listen for file uploads separately
     document.getElementById('data-upload-input')?.addEventListener('change', handleDataUpload);
+    document.getElementById('image-upload-input')?.addEventListener('change', handleImageUpload);
     
     // Scroll listener for back-to-top button
     window.addEventListener('scroll', () => {
@@ -438,14 +440,41 @@ function handleExecuteCode() {
 }
 
 // --- SPECIAL FEATURE: IMAGE ---
+function handleImageUpload(event) {
+    const file = event.target.files[0];
+    if (file) {
+        uploadedImageFile = file;
+        document.getElementById('file-name-display').textContent = file.name;
+    } else {
+        uploadedImageFile = null;
+        document.getElementById('file-name-display').textContent = 'Choose an image...';
+    }
+}
+
 async function handleGenerateImage() {
+    hideMessages();
     const prompt = document.getElementById('image-prompt-input').value.trim();
-    if (!prompt) return showError('Please enter an image description.');
+    if (!prompt && !uploadedImageFile) {
+        return showError('Please enter a description or upload an image.');
+    }
+    
     setLoadingState(true, 'AI is generating your image...');
     const container = document.getElementById('generated-image-container');
     if(container) container.classList.add('hidden');
+
     try {
-        const imageUrl = await callImageGenerationAPI(prompt);
+        let imageData = null;
+        // If an image is uploaded, read it and convert to base64
+        if (uploadedImageFile) {
+            imageData = await new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result.split(',')[1]); // Get the Base64 part
+                reader.onerror = error => reject(error);
+                reader.readAsDataURL(uploadedImageFile);
+            });
+        }
+        
+        const imageUrl = await callImageGenerationAPI(prompt, imageData);
         const img = document.getElementById('generated-image-output');
         const link = document.getElementById('download-image-btn');
         if (img) img.src = imageUrl;
@@ -454,7 +483,11 @@ async function handleGenerateImage() {
             link.classList.remove('disabled-link');
         }
         if (container) container.classList.remove('hidden');
-    } catch (error) { showError(error.message); } finally { setLoadingState(false); }
+    } catch (error) { 
+        showError(error.message); 
+    } finally { 
+        setLoadingState(false); 
+    }
 }
 
 // --- UI & UTILITY FUNCTIONS ---
