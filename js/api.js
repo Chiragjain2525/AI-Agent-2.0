@@ -12,6 +12,7 @@ export async function callAIAssistant(prompt) {
 
     if (!response.ok) {
         const errorData = await response.json();
+        console.error("API Error:", errorData);
         throw new Error(errorData.error || 'Failed to get AI response.');
     }
 
@@ -25,11 +26,14 @@ export async function callAIAssistant(prompt) {
 }
 
 /**
- * Calls our secure Netlify function to generate an image.
+ * Calls our secure Netlify function to generate an image using imagen-3.0-generate-002.
  * @param {string} prompt - The prompt for image generation.
  * @returns {Promise<string>} - The base64-encoded image data URL.
  */
 export async function callImageGenerationAPI(prompt) {
+    if (!prompt) {
+        throw new Error("Prompt is required for image generation.");
+    }
     const response = await fetch('/.netlify/functions/call-ai', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -38,25 +42,30 @@ export async function callImageGenerationAPI(prompt) {
 
     if (!response.ok) {
         const errorData = await response.json();
+        console.error("Image Generation API Error:", errorData);
         throw new Error(errorData.error || 'Failed to generate image.');
     }
 
     const result = await response.json();
     if (result.predictions?.[0]?.bytesBase64Encoded) {
-        return `data:image/image/jpeg;base64,${result.predictions[0].bytesBase64Encoded}`;
+        return `data:image/jpeg;base64,${result.predictions[0].bytesBase64Encoded}`;
     } else {
-        console.error("Unexpected Image API response structure:", result);
-        throw new Error("The Image AI failed to generate a valid response.");
+        console.error("Unexpected Image Generation API response structure:", result);
+        throw new Error("The Image AI failed to generate a valid response. Check the console for more details.");
     }
 }
 
 /**
- * Calls our secure Netlify function to edit an image based on a prompt.
+ * Calls our secure Netlify function to edit an image based on a prompt using gemini-2.0-flash-preview-image-generation.
  * @param {string} prompt - The prompt for image editing.
  * @param {string} base64Image - The base64-encoded image data.
  * @returns {Promise<string>} - The base64-encoded image data URL of the edited image.
  */
 export async function callImageEditingAPI(prompt, base64Image) {
+    if (!prompt || !base64Image) {
+        throw new Error("Prompt and image data are required for image editing.");
+    }
+
     const response = await fetch('/.netlify/functions/call-ai', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -65,6 +74,7 @@ export async function callImageEditingAPI(prompt, base64Image) {
 
     if (!response.ok) {
         const errorData = await response.json();
+        console.error("Image Editing API Error:", errorData);
         throw new Error(errorData.error || 'Failed to edit image.');
     }
 
@@ -74,7 +84,7 @@ export async function callImageEditingAPI(prompt, base64Image) {
         return `data:image/png;base64,${base64Data}`;
     } else {
         console.error("Unexpected Image Editing API response structure:", result);
-        throw new Error("The Image Editing AI failed to generate a valid response.");
+        throw new Error("The Image Editing AI failed to generate a valid response. Check the console for more details.");
     }
 }
 
@@ -112,7 +122,6 @@ export async function fetchRepoData(owner, repo) {
  * Fetches the content of a specific file from a GitHub repository.
  * @param {string} owner - The owner of the repository.
  * @param {string} repo - The name of the repository.
- * @param {string} path - The path to the file within the repository.
  * @returns {Promise<string|null>} - The decoded content of the file, or null if not found.
  */
 export async function getFileContent(owner, repo, path) {
@@ -127,4 +136,3 @@ export async function getFileContent(owner, repo, path) {
         return null;
     }
 }
-
