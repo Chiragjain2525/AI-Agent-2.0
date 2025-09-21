@@ -35,7 +35,7 @@ exports.handler = async (event) => {
             apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:predict?key=${apiKey}`;
             apiPayload = { instances: { prompt: prompt }, parameters: { "sampleCount": 1 } };
         } else if (type === 'image_edit') {
-            model = 'gemini-2.5-flash-preview-image-generation';
+            model = 'gemini-2.0-flash-preview-image-generation';
             apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
             apiPayload = {
                 contents: [{
