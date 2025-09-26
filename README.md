@@ -1,7 +1,3 @@
-As an expert technical writer, I'll craft a high-quality `README.md` for your `AI-Agent-2.0` repository. Given the minimal data, I will infer a plausible and compelling description, features, and usage based on the project name "AI-Agent-2.0" and the JavaScript language.
-
----
-
 # AI-Agent-2.0
 
 ![GitHub Workflow Status](https://img.shields.io/badge/build-passing-brightgreen)
